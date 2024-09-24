@@ -1,0 +1,3 @@
+LIBRARY         HtVSTHeteroDyning
+DESCRIPTION     'HeteroDyning'
+EXPORTS         VSTPluginMain=_VSTPluginMain

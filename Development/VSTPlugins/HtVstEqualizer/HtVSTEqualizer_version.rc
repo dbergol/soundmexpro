@@ -1,0 +1,32 @@
+1 VERSIONINFO LOADONCALL MOVEABLE DISCARDABLE IMPURE
+FILEVERSION 2, 9, 0, 0
+PRODUCTVERSION 2, 9, 0, 0
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_APP
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "040704E4"
+  {
+   VALUE "CompanyName", "Daniel Berg\000"
+   VALUE "ProductName", "SoundMexPro\000"
+   VALUE "ProductVersion", "2.9.0.0\000"
+   VALUE "FileVersion", "2.9.0.0\000"
+   VALUE "LegalCopyright", "Copyright 2023 Daniel Berg\000"
+   VALUE "FileDescription", "VST MMTOOLS equalizer plugin\000"
+   VALUE "InternalName", "HtVSTEqualizer\000"
+   VALUE "OriginalFilename", "HtVSTEqualizer.dll\000"
+   VALUE "LegalTrademarks", "\000"
+   VALUE "Comments", "\000"
+  }
+
+ }
+
+ BLOCK "VarFileInfo"
+ {
+  VALUE "Translation", 1031, 1252
+ }
+
+}
+

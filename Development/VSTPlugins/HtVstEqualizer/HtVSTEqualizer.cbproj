@@ -1,0 +1,184 @@
+﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+		<PropertyGroup>
+			<ProjectGuid>{023EBBBC-57F3-46C3-AD0A-B05BA67D76E5}</ProjectGuid>
+			<ProjectType>CppDynamicLibrary</ProjectType>
+			<Config Condition="'$(Config)'==''">Release</Config>
+			<ProjectVersion>12.0</ProjectVersion>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Basis' or '$(Base)'!=''">
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+			<Cfg_2>true</Cfg_2>
+			<CfgParent>Base</CfgParent>
+			<Base>true</Base>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Base)'!=''">
+			<ILINK_MapFileType>None</ILINK_MapFileType>
+			<ILINK_DisableIncrementalLinking>true</ILINK_DisableIncrementalLinking>
+			<BCC_PCHUsage>None</BCC_PCHUsage>
+			<BCC_InstructionSet>5</BCC_InstructionSet>
+			<BCC_UseRegisterVariables>None</BCC_UseRegisterVariables>
+			<BCC_IntegerTypeEnums>true</BCC_IntegerTypeEnums>
+			<LinkPackageStatics>rtl.lib;vcl.lib;mmtools_d2010.lib;vclx.lib;tee.lib;vclimg.lib;xmlrtl.lib;vclactnband.lib;Tee914.lib</LinkPackageStatics>
+			<IncludePath>..\..\vstsdk2.4\include\;..\..\MMTools\lib;$(IncludePath)</IncludePath>
+			<ILINK_AppType>Windows</ILINK_AppType>
+			<TASM_Defines>NO_STRICT;$(TASM_Defines)</TASM_Defines>
+			<BRCC_Defines>NO_STRICT;$(BRCC_Defines)</BRCC_Defines>
+			<DCC_UnitSearchPath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+			<BCC_Defines>NO_STRICT;$(BCC_Defines)</BCC_Defines>
+			<DCC_CBuilderOutput>JPHNE</DCC_CBuilderOutput>
+			<PackageImports>vcl.bpi;rtl.bpi;vclx.bpi;bcbsmp.bpi;dbrtl.bpi;adortl.bpi;vcldb.bpi;bdertl.bpi;vcldbx.bpi;dsnap.bpi;dsnap.bpi;dsnapcon.bpi;teeui.bpi;teedb.bpi;tee.bpi;ibxpress.bpi;vclie.bpi;xmlrtl.bpi;inet.bpi;inetdbbde.bpi;inetdbxpress.bpi;inetdb.bpi;bcbie.bpi;soaprtl.bpi;dbexpress.bpi;dbxcds.bpi;indycore.bpi;indysystem.bpi;bcboffice2k.bpi;mmtools_d2010.bpi</PackageImports>
+			<BRCC_OutputDir>obj\</BRCC_OutputDir>
+			<BRCC_IncludePath>.;$(BDS)\include;$(BDS)\include\vcl;..\..\vstsdk2.4\include;..\..\MMTools\include;$(BDS)\include\dinkumware;$(BRCC_IncludePath)</BRCC_IncludePath>
+			<BCC_OptimizeForSpeed>true</BCC_OptimizeForSpeed>
+			<BCC_IncludePath>.;$(BDS)\include;$(BDS)\include\vcl;..\..\vstsdk2.4\include;..\..\MMTools\include;$(BDS)\include\dinkumware;$(BCC_IncludePath)</BCC_IncludePath>
+			<DCC_ObjOutput>obj\</DCC_ObjOutput>
+			<DCC_IncludePath>.\;$(BDS)\lib;$(BDS)\lib\obj;$(DCC_IncludePath)</DCC_IncludePath>
+			<TASM_IncludePath>.;$(BDS)\include;$(BDS)\include\vcl;..\..\vstsdk2.4\include;..\..\MMTools\include;$(BDS)\include\dinkumware;$(TASM_IncludePath)</TASM_IncludePath>
+			<ILINK_WinAppType>DLL</ILINK_WinAppType>
+			<AllPackageLibs>rtl.lib;vcl.lib;mmtools_d2010.lib;vclx.lib;tee.lib;vclimg.lib;xmlrtl.lib;vclactnband.lib;Tee914.lib</AllPackageLibs>
+			<BCC_GenerateMultithreaded>true</BCC_GenerateMultithreaded>
+			<ILINK_IntermediateOutputPath>obj</ILINK_IntermediateOutputPath>
+			<TASM_Debugging>None</TASM_Debugging>
+			<TASM_AdditionalSwitches> /w2 obj\</TASM_AdditionalSwitches>
+			<ILINK_BpiLibOutputDir>obj</ILINK_BpiLibOutputDir>
+			<FinalOutputDir>..\..\..\..\plugins\</FinalOutputDir>
+			<BCC_GenerateDLL>true</BCC_GenerateDLL>
+			<Multithreaded>true</Multithreaded>
+			<ILINK_LibraryPath>..\..\vstsdk2.4\lib\;$(BDS)\lib\obj;..\..\MMTools\lib;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+			<DCC_AdditionalSwitches> -M</DCC_AdditionalSwitches>
+			<DCC_DcuOutput>obj\</DCC_DcuOutput>
+			<BCC_OutputDir>obj\</BCC_OutputDir>
+			<OutputExt>dll</OutputExt>
+		</PropertyGroup>
+		<PropertyGroup Condition="'$(Cfg_2)'!=''">
+			<BCC_Defines>NDEBUG;$(BCC_Defines);$(BCC_Defines)</BCC_Defines>
+			<IntermediateOutputDir>obj</IntermediateOutputDir>
+			<BCC_UserSuppliedOptions> -5 -Vx -xp -b -Ve -r</BCC_UserSuppliedOptions>
+			<DCC_AdditionalSwitches> -M -$O+</DCC_AdditionalSwitches>
+			<ILINK_LibraryPath>$(BDS)\lib\release;$(ILINK_LibraryPath)</ILINK_LibraryPath>
+		</PropertyGroup>
+		<ItemGroup>
+			<CppCompile Include="AHtVSTEqualizerMain.cpp">
+				<BuildOrder>23</BuildOrder>
+				<BuildOrder>0</BuildOrder>
+			</CppCompile>
+			<CppCompile Include="FloatOlaflt.cpp">
+				<BuildOrder>3</BuildOrder>
+				<BuildOrder>26</BuildOrder>
+			</CppCompile>
+			<CppCompile Include="eqinput.cpp">
+				<BuildOrder>29</BuildOrder>
+				<Form>frmEqInput</Form>
+				<DependentOn>eqinput.h</DependentOn>
+				<BuildOrder>2</BuildOrder>
+			</CppCompile>
+			<CppCompile Include="AHtVSTEqualizer.cpp">
+				<BuildOrder>20</BuildOrder>
+				<BuildOrder>1</BuildOrder>
+			</CppCompile>
+			<ResFiles Include="HtVSTEqualizer.res">
+				<BuildOrder>6</BuildOrder>
+				<BuildOrder>2</BuildOrder>
+			</ResFiles>
+        <LibFiles Include="VSTSDK.lib" Condition="'$(Platform)'=='Win32'">
+            <BuildOrder>5</BuildOrder>
+            <IgnorePath>true</IgnorePath>
+        </LibFiles>
+			<ResourceCompile Include="HtVSTEqualizer_version.rc">
+				<ModuleName>HtVSTEqualizer_version.rc</ModuleName>
+				<Form>HtVSTEqualizer_version.res</Form>
+				<BuildOrder>7</BuildOrder>
+			</ResourceCompile>
+			<FormResources Include="eqinput.dfm"/>
+			<BuildConfiguration Include="Basis">
+				<Key>Base</Key>
+			</BuildConfiguration>
+			<BuildConfiguration Include="Release">
+				<Key>Cfg_2</Key>
+				<CfgParent>Base</CfgParent>
+			</BuildConfiguration>
+		</ItemGroup>
+		<Import Project="$(BDS)\Bin\CodeGear.Cpp.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Cpp.Targets')"/>
+		<ProjectExtensions>
+			<Borland.Personality>CPlusPlusBuilder.Personality.12</Borland.Personality>
+			<Borland.ProjectType>CppDynamicLibrary</Borland.ProjectType>
+			<BorlandProject>
+				<CPlusPlusBuilder.Personality>
+					<VersionInfo>
+						<VersionInfo Name="IncludeVerInfo">False</VersionInfo>
+						<VersionInfo Name="AutoIncBuild">False</VersionInfo>
+						<VersionInfo Name="MajorVer">4</VersionInfo>
+						<VersionInfo Name="MinorVer">2</VersionInfo>
+						<VersionInfo Name="Release">0</VersionInfo>
+						<VersionInfo Name="Build">0</VersionInfo>
+						<VersionInfo Name="Debug">False</VersionInfo>
+						<VersionInfo Name="PreRelease">False</VersionInfo>
+						<VersionInfo Name="Special">False</VersionInfo>
+						<VersionInfo Name="Private">False</VersionInfo>
+						<VersionInfo Name="DLL">False</VersionInfo>
+						<VersionInfo Name="Locale">1031</VersionInfo>
+						<VersionInfo Name="CodePage">1252</VersionInfo>
+					</VersionInfo>
+					<VersionInfoKeys>
+						<VersionInfoKeys Name="CompanyName">Daniel Berg</VersionInfoKeys>
+						<VersionInfoKeys Name="FileDescription">VST overlapped add equalizer</VersionInfoKeys>
+						<VersionInfoKeys Name="FileVersion">4.2.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="InternalName"/>
+						<VersionInfoKeys Name="LegalCopyright"/>
+						<VersionInfoKeys Name="LegalTrademarks"/>
+						<VersionInfoKeys Name="OriginalFilename"/>
+						<VersionInfoKeys Name="ProductName"/>
+						<VersionInfoKeys Name="ProductVersion">1.0.0.0</VersionInfoKeys>
+						<VersionInfoKeys Name="Comments"/>
+					</VersionInfoKeys>
+					<HistoryLists_hlIncludePath>
+					</HistoryLists_hlIncludePath>
+					<HistoryLists_hlLibraryPath>
+					</HistoryLists_hlLibraryPath>
+					<HistoryLists_hlDebugSourcePath>
+					</HistoryLists_hlDebugSourcePath>
+					<HistoryLists_hlConditionals>
+					</HistoryLists_hlConditionals>
+					<HistoryLists_hlIntOutputDir>
+					</HistoryLists_hlIntOutputDir>
+					<HistoryLists_hlFinalOutputDir>
+					</HistoryLists_hlFinalOutputDir>
+					<HistoryLists_hIBPIOutputDir>
+					</HistoryLists_hIBPIOutputDir>
+					<Debugging>
+						<Debugging Name="DebugSourceDirs">$(BCB)\source\vcl</Debugging>
+					</Debugging>
+					<Parameters>
+						<Parameters Name="RunParams"/>
+						<Parameters Name="Launcher"/>
+						<Parameters Name="UseLauncher">False</Parameters>
+						<Parameters Name="DebugCWD"/>
+						<Parameters Name="HostApplication"/>
+						<Parameters Name="RemoteHost"/>
+						<Parameters Name="RemotePath"/>
+						<Parameters Name="RemoteLauncher"/>
+						<Parameters Name="RemoteCWD"/>
+						<Parameters Name="RemoteDebug">False</Parameters>
+						<Parameters Name="RemoteParams"/>
+						<Parameters Name="UseRemoteLauncher">False</Parameters>
+						<Parameters Name="Debug Symbols Search Path"/>
+						<Parameters Name="LoadAllSymbols">True</Parameters>
+						<Parameters Name="LoadUnspecifiedSymbols">False</Parameters>
+					</Parameters>
+					<Compiler>
+						<Compiler Name="ShowInfoMsgs">1</Compiler>
+						<Compiler Name="LinkDebugVcl">0</Compiler>
+						<Compiler Name="LinkCGLIB">0</Compiler>
+					</Compiler>
+					<ProjectProperties>
+						<ProjectProperties Name="AutoShowDeps">False</ProjectProperties>
+						<ProjectProperties Name="ManagePaths">True</ProjectProperties>
+						<ProjectProperties Name="VerifyPackages">True</ProjectProperties>
+					</ProjectProperties>
+				</CPlusPlusBuilder.Personality>
+			</BorlandProject>
+			<ProjectFileVersion>12</ProjectFileVersion>
+		</ProjectExtensions>
+	</Project>

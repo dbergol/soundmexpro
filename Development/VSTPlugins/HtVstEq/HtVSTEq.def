@@ -1,0 +1,3 @@
+LIBRARY         HtVSTEqualizer
+DESCRIPTION     'Equalizer'
+EXPORTS         VSTPluginMain=_VSTPluginMain

@@ -1,0 +1,3 @@
+LIBRARY         HtVSTConv
+DESCRIPTION     'Convolver'
+EXPORTS         VSTPluginMain=VSTPluginMain
