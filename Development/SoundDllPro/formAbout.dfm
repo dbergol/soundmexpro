@@ -4,7 +4,7 @@ object AboutBox: TAboutBox
   BorderStyle = bsDialog
   Caption = 'About'
   ClientHeight = 471
-  ClientWidth = 500
+  ClientWidth = 510
   Color = clWindow
   Font.Charset = ANSI_CHARSET
   Font.Color = clBlack
@@ -13,13 +13,13 @@ object AboutBox: TAboutBox
   Font.Style = []
   OnShow = FormShow
   DesignSize = (
-    500
+    510
     471)
   TextHeight = 13
   object pnl: TPanel
     Left = 0
     Top = 0
-    Width = 500
+    Width = 510
     Height = 428
     Align = alTop
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -30,8 +30,9 @@ object AboutBox: TAboutBox
     ParentBackground = False
     TabOrder = 1
     StyleElements = [seFont, seBorder]
+    ExplicitWidth = 500
     DesignSize = (
-      500
+      510
       428)
     object lbVersion: TLabel
       Left = 13
@@ -1733,15 +1734,16 @@ object AboutBox: TAboutBox
     object bvlLine2: TBevel
       Left = 0
       Top = 311
-      Width = 498
+      Width = 508
       Height = 3
       Anchors = [akLeft, akTop, akRight]
       Shape = bsTopLine
+      ExplicitWidth = 498
     end
     object Bevel1: TBevel
       Left = 2
       Top = 57
-      Width = 496
+      Width = 506
       Height = 2
       Align = alTop
       Shape = bsTopLine
@@ -1749,9 +1751,9 @@ object AboutBox: TAboutBox
       ExplicitWidth = 480
     end
     object reOwn: TRichEdit
-      Left = 15
+      Left = 108
       Top = 105
-      Width = 359
+      Width = 397
       Height = 54
       TabStop = False
       BevelInner = bvLowered
@@ -1760,7 +1762,10 @@ object AboutBox: TAboutBox
       Lines.Strings = (
         'Copyright '#169' 2023'
         'Dr. Daniel Berg, Carl von Ossietzky University Oldenburg'
-        'https://www.soundmexpro.de')
+        'http://www.audiospike.de'
+        
+          'Supported by the German Research Council (EXC 2177/1; project ID' +
+          ' 390895286)')
       ParentColor = True
       TabOrder = 0
       Transparent = True
@@ -1803,7 +1808,7 @@ object AboutBox: TAboutBox
       AlignWithMargins = True
       Left = 15
       Top = 322
-      Width = 480
+      Width = 490
       Height = 101
       Margins.Left = 13
       TabStop = False
@@ -1814,23 +1819,22 @@ object AboutBox: TAboutBox
       Lines.Strings = (
         
           'SoundMexPro uses the libsndfile by Erik de Castro Lopo and other' +
-          's, see '
-        'http://www.mega-nerd.com/libsndfile/'
-        'It published under the GNU Lesser General Public License.'
+          's published under the GNU Lesser '
+        'General Public License, see http://www.mega-nerd.com/libsndfile/'
         ''
         
           'SoundMexPro uses FFTW by Matteo Frigo, Massachusetts Institute o' +
-          'f Technology, see'
-        'http://www.fftw.org'
-        'It published under the GNU General Public License.')
+          'f Technology published under '
+        'the GNU General Public License, see http://www.fftw.org')
       ReadOnly = True
       TabOrder = 3
       Transparent = True
+      ExplicitWidth = 480
     end
     object pnlSMP: TPanel
       Left = 2
       Top = 2
-      Width = 496
+      Width = 506
       Height = 55
       Align = alTop
       BevelOuter = bvNone
@@ -1845,10 +1849,11 @@ object AboutBox: TAboutBox
       ParentFont = False
       TabOrder = 4
       StyleElements = [seFont, seBorder]
+      ExplicitWidth = 496
     end
   end
   object OKButton: TButton
-    Left = 172
+    Left = 203
     Top = 434
     Width = 114
     Height = 32
