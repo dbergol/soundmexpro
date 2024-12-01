@@ -1133,20 +1133,12 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
-        <PreBuildEvent/>
-        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
-        <PreLinkEvent/>
-        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy64.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy64.dll ..\..\bin64 /Y</PostBuildEvent>
-        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='SoundMexProPyMain.cpp'">
         <PreBuildEvent/>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy64.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy64.dll ..\..\bin64 /Y</PostBuildEvent>
+        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='SoundMexProPy.h'">
@@ -1154,7 +1146,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy64.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy64.dll ..\..\bin64 /Y</PostBuildEvent>
+        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='T:\mex\soundmexpro_tools.cpp'">
@@ -1162,7 +1154,7 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy64.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy64.dll ..\..\bin64 /Y</PostBuildEvent>
+        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='T:\mex\soundmexpro_ipc.cpp'">
@@ -1170,10 +1162,18 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>
         <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
-        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy64.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy64.dll ..\..\bin64 /Y</PostBuildEvent>
+        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' And '$(FileToCompile)'=='T:\mex\soundmexpro_ipc.h'">
+        <PreBuildEvent/>
+        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
+        <PreLinkEvent/>
+        <PreLinkEventIgnoreExitCode>False</PreLinkEventIgnoreExitCode>
+        <PostBuildEvent>copy ..\..\bin\SoundMexProPy.dll ..\..\bin\SoundMexProPy32.dll /Y&amp;&amp;del ..\..\bin\SoundMexProPy.dll&amp;&amp;copy ..\..\bin\SoundMexProPy32.dll ..\..\bin64 /Y</PostBuildEvent>
+        <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' And '$(Platform)'=='Win64'">
         <PreBuildEvent/>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
         <PreLinkEvent/>

@@ -158,6 +158,7 @@ class SoundDllProMain
       bool                    m_bTestCopyOutToIn;
       LPFNEXTDATANOTIFY       m_lpfnExtDataNotify;    /// function pointer for external notifying
       bool                    m_bInitDebug;
+      bool                    m_bNoGUI;               /// flag, if tracks and mixer GUI to be disabled
       SoundDllProMain();
       virtual ~SoundDllProMain(void);
       static SoundDllProMain*    Instance();

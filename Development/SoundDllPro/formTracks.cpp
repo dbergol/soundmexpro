@@ -742,6 +742,11 @@ uint64_t    TTracksForm::UpdateData(bool bRemoveOnly)
 {
    uint64_t nNumSamples   = 0;
    uint64_t nNumTrackSamples;
+
+   if (SoundClass()->m_bNoGUI)
+      return nNumSamples;
+
+
    if (!SoundClass())
       throw Exception("Global SoundClass invalid");
    // check which data to be reloaded and which are still/already there

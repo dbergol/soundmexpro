@@ -66,7 +66,7 @@ int __fastcall TAboutBox::About()
       pnlSMP->ParentColor  = true;
       }
    Tag = 0;
-   if (SoundClass())
+   if (SoundClass() && !SoundClass()->m_bNoGUI)
       {
       bool bMix      = (!!SoundClass()->m_pfrmMixer
                         && SoundClass()->m_pfrmMixer->Visible

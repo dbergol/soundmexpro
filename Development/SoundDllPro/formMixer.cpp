@@ -107,6 +107,7 @@ __fastcall TMixerForm::~TMixerForm()
 //------------------------------------------------------------------------------
 void TMixerForm::Init()
 {
+
    // return if initialized (!)
    if (m_vvMixers[CT_TRACK].size())
       return;
@@ -339,7 +340,7 @@ void TMixerForm::SetLevelsInternal()
             }
          }
 
-      if (SoundClass() && SoundClass()->m_pfrmTracks->Visible)
+      if (SoundClass() && !SoundClass()->m_bNoGUI && SoundClass()->m_pfrmTracks->Visible)
          SoundClass()->m_pfrmTracks->SetTrackLevelsInternal(m_vafTrackVolumes);
       }
    __finally
@@ -376,7 +377,7 @@ void TMixerForm::ResetLevelsInternal()
          }
       }
 
-   if (SoundClass() && SoundClass()->m_pfrmTracks->Visible)
+   if (SoundClass() && !SoundClass()->m_bNoGUI && SoundClass()->m_pfrmTracks->Visible)
       SoundClass()->m_pfrmTracks->ResetTrackLevelsInternal();
 
 

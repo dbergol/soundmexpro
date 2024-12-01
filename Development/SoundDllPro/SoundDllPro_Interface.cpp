@@ -442,8 +442,12 @@ void TrackMap(TStringList *psl)
          {
          LeaveCriticalSection(&SoundClass()->m_csProcess);
          }
-      SoundClass()->m_pfrmTracks->UpdateTrackInfos();
-      SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
+
+      if (!SoundClass()->m_bNoGUI)
+         {
+         SoundClass()->m_pfrmTracks->UpdateTrackInfos();
+         SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
+         }
       }
 
    // write current mapping to return
@@ -625,6 +629,10 @@ void   ShowTracks(TStringList *psl)
    bool bForeGround = !(psl->Values[SOUNDDLLPRO_PAR_FOREGROUND] == "0");
    bool bShowWaveData = psl->Values[SOUNDDLLPRO_PAR_WAVEDATA] != "0";
    psl->Clear();
+
+   if (SoundClass()->m_bNoGUI)
+      return;
+
    if (!SoundClass()->m_vTracks.size())
       throw Exception("no tracks configured to be displayed");
 
@@ -646,6 +654,8 @@ void   ShowTracks(TStringList *psl)
 void   HideTracks(TStringList *psl)
 {
    psl->Clear();
+   if (SoundClass()->m_bNoGUI)
+      return;
    SoundClass()->m_pfrmTracks->Hide();
 }
 //------------------------------------------------------------------------------
@@ -657,6 +667,10 @@ void   UpdateTracks(TStringList *psl)
 {
    bool bShowWaveData = psl->Values[SOUNDDLLPRO_PAR_WAVEDATA] != "0";
    psl->Clear();
+
+   if (SoundClass()->m_bNoGUI)
+      return;
+
    SoundClass()->m_pfrmTracks->UpdateTracks(true, bShowWaveData);
 }
 //------------------------------------------------------------------------------
@@ -672,18 +686,22 @@ void   ShowMixer(TStringList *psl)
    int nOutputs = (int)GetInt(psl, SOUNDDLLPRO_PAR_OUTPUTS, 1, VAL_POS_OR_ZERO);
    int nInputs = (int)GetInt(psl, SOUNDDLLPRO_PAR_INPUTS, 1, VAL_POS_OR_ZERO);
    psl->Clear();
-   if (!SoundClass()->m_pfrmMixer->Visible)
-	  {
-	  SoundClass()->m_pfrmMixer->FormStyle = fs;
-	  if (!nTracks)
-		 SoundClass()->m_pfrmMixer->pnlTracks->Width = 0;
-	  if (!nOutputs)
-		 SoundClass()->m_pfrmMixer->pnlOutputs->Width = 0;
-	  if (!nInputs)
-		 SoundClass()->m_pfrmMixer->pnlInputs->Width = 0;
 
-	  SoundClass()->m_pfrmMixer->Show();
-	  }
+   if (SoundClass()->m_bNoGUI)
+      return;
+
+   if (!SoundClass()->m_pfrmMixer->Visible)
+      {
+      SoundClass()->m_pfrmMixer->FormStyle = fs;
+      if (!nTracks)
+         SoundClass()->m_pfrmMixer->pnlTracks->Width = 0;
+      if (!nOutputs)
+       SoundClass()->m_pfrmMixer->pnlOutputs->Width = 0;
+      if (!nInputs)
+       SoundClass()->m_pfrmMixer->pnlInputs->Width = 0;
+
+      SoundClass()->m_pfrmMixer->Show();
+      }
    if (bForeGround)
 	  SetForegroundWindow(SoundClass()->m_pfrmMixer->Handle);
 }
@@ -694,6 +712,8 @@ void   ShowMixer(TStringList *psl)
 //------------------------------------------------------------------------------
 void   HideMixer(TStringList *psl)
 {
+   if (SoundClass()->m_bNoGUI)
+      return;
    psl->Clear();
    SoundClass()->m_pfrmMixer->Hide();
 }
@@ -1632,10 +1652,13 @@ void ChannelName(TStringList *psl)
             }
          pslNames->Delimiter = ',';
 
-         SoundClass()->m_pfrmTracks->UpdateTrackInfos();
-         SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
-         SoundClass()->m_pfrmMixer->UpdateChannelData(CT_INPUT);
-         SoundClass()->m_pfrmMixer->UpdateChannelData(CT_OUTPUT);
+         if (!SoundClass()->m_bNoGUI)
+            {
+            SoundClass()->m_pfrmTracks->UpdateTrackInfos();
+            SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
+            SoundClass()->m_pfrmMixer->UpdateChannelData(CT_INPUT);
+            SoundClass()->m_pfrmMixer->UpdateChannelData(CT_OUTPUT);
+            }
          // return names that were set OR all names
          if (pslNames->Count)
             psl->Values[SOUNDDLLPRO_PAR_NAME] = pslNames->DelimitedText;
@@ -2590,8 +2613,11 @@ void IOStatus(TStringList *psl)
                   SoundClass()->m_vviIOMapping[nInputChannel].push_back(viTrack[nIndex]);
                }
             }
-         SoundClass()->m_pfrmTracks->UpdateTrackInfos();
-         SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
+         if (!SoundClass()->m_bNoGUI)
+            {
+            SoundClass()->m_pfrmTracks->UpdateTrackInfos();
+            SoundClass()->m_pfrmMixer->UpdateChannelData(CT_TRACK);
+            }
          }
       __finally
          {

@@ -82,6 +82,9 @@ static struct CMD_ARG
    "                 usage of a license that is currently used by another user!\n"
    "                 Without this parameter you are asked with a dialog if you\n"
    "                 want to take over the license and will have the choice...\n"
+   "      nogui:     if set to '1' then the mixer and track view are disabked\n"
+   "                 This might be usefull when using huge numbers of tracks to\n"
+   "                 avoid performance/memory problems\n"
    "      driver:    name or index of ASIO driver to use\n"
    "                 NOTE: ignored for file2file-operation.\n"
    "      file2file: if set to '1' all final output channel data are written\n"
@@ -247,6 +250,7 @@ static struct CMD_ARG
    "      quiet:     if set to 1, then no version info is printed to workspace.\n"
    "Def.> force:     empty\n"
    "      forcelic:  0\n"
+   "      nogui:     0\n"
    "      driver:    0\n"
    "      file2file: 0\n"
    "      reccompensatelatency: 0\n"
@@ -324,6 +328,7 @@ static struct CMD_ARG
    SOUNDDLLPRO_PAR_EXTDONEPROC ","
    SOUNDDLLPRO_PAR_EXTDATANOTIFY ","
    SOUNDDLLPRO_PAR_DATANOTIFYTRACK ","
+   SOUNDDLLPRO_PAR_NOGUI ","
    ,
    Init,                                                                // function pointer
    0                                                                    // must be initialized

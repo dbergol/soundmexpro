@@ -120,6 +120,7 @@ SoundDllProMain::SoundDllProMain()
       m_bTestCopyOutToIn(false),
       m_lpfnExtDataNotify(NULL),
       m_bInitDebug(false),
+      m_bNoGUI(false),
       m_nHangsDetected(0),
       m_nProcessedBuffers(0),
       m_nPlayedBuffers(0),
@@ -159,7 +160,6 @@ SoundDllProMain::SoundDllProMain()
       m_bAutoCleanup(false),
       m_nBufsizeFile2File(1024),
       m_nOutChannelsFile2File(2)
-
 {
    OutputDebugString(__FUNC__);
    if (!IsAudioSpike())
@@ -326,6 +326,8 @@ void SoundDllProMain::Initialize(TStringList *psl)
       {
       try
          {
+         m_bNoGUI = GetInt(psl, SOUNDDLLPRO_PAR_NOGUI, 2, VAL_POS_OR_ZERO) == 1;
+
          m_bInitDebug = GetProfileStringDefault("InitDebug", "0") == "1";
          if (m_bInitDebug)
             WriteDebugString("Initialize 2", g_strBinPath + "init.log");
@@ -496,7 +498,10 @@ void SoundDllProMain::Initialize(TStringList *psl)
          for (unsigned int i = 0; i < (unsigned int)m_nNumTrackLevels; i++)
             m_vvfTrackLevel[i].resize((unsigned int)nTracks);
          // afterwards initialize mixer (tracks must have been created prior to this)
-         m_pfrmMixer->Init();
+         if (m_bInitDebug)
+            WriteDebugString("Initialize 7.1.1", g_strBinPath + "init.log");
+         if (!m_bNoGUI)
+            m_pfrmMixer->Init();
          if (m_bInitDebug)
             WriteDebugString("Initialize 7.2", g_strBinPath + "init.log");
          // set ramp length: default is 10 ms
@@ -723,7 +728,7 @@ void SoundDllProMain::Exit()
    EnterCriticalSection(&m_csBufferDone);
    try
       {
-      if (m_pfrmMixer)
+      if (m_pfrmMixer && !m_bNoGUI)
          {
          m_pfrmMixer->Hide();
          m_pfrmMixer->Exit();
@@ -958,6 +963,7 @@ void SoundDllProMain::ClearTracks(std::vector<int> viTracks)
             throw Exception("invalid track specified for clearing");
          m_vTracks[(unsigned long)viTracks[nTrack]]->Cleanup(true);
          }
+
       m_pfrmTracks->UpdateData(true);
       }
    __finally
@@ -1085,7 +1091,7 @@ void SoundDllProMain::SetPosition(uint64_t nPosition)
 
       for (unsigned int nTrackIndex = 0; nTrackIndex < m_vTracks.size(); nTrackIndex++)
          m_vTracks[nTrackIndex]->SetPosition(nPosition);
-      if (m_pfrmTracks->Visible)
+      if (m_pfrmTracks->Visible && !m_bNoGUI)
          {
          m_pfrmTracks->SetCursorPos((int64_t)m_nBufferPlayPosition);
          m_nLastCursorPosition = m_nBufferPlayPosition;
@@ -1355,19 +1361,19 @@ void SoundDllProMain::SetChannelMute(  const std::valarray<bool > &vabMute,
                                        bool bUpdateMixer)
 {
    if (vabMute.size() != m_vvabChannelMute[ct].size())
-	  throw Exception("sizing error in " + UnicodeString(__FUNC__));
+      throw Exception("sizing error in " + UnicodeString(__FUNC__));
    EnterCriticalSection(&m_csProcess);
    try
-	  {
-	  m_vvabChannelMute[ct] = vabMute;
-	  CalculateAppliedMuteStatus(ct);
-	  if (bUpdateMixer)
-		 m_pfrmMixer->UpdateButtons(ct);
-	  }
-   __finally
-	  {
-	  LeaveCriticalSection(&m_csProcess);
-	  }
+      {
+      m_vvabChannelMute[ct] = vabMute;
+      CalculateAppliedMuteStatus(ct);
+      if (bUpdateMixer)
+         m_pfrmMixer->UpdateButtons(ct);
+      }
+      __finally
+      {
+         LeaveCriticalSection(&m_csProcess);
+      }
 }
 //------------------------------------------------------------------------------
 
@@ -1924,7 +1930,7 @@ void SoundDllProMain::OnBufferDone(vvf& vvfBuffersIn, vvf& vvfBuffersOut, bool& 
    try
       {
       uint64_t nBufferPlayPosition = GetSamplePosition();
-      if (m_pfrmTracks->Visible)
+      if (m_pfrmTracks->Visible && !m_bNoGUI)
          {
          if (nBufferPlayPosition > m_nLastCursorPosition)
             m_pfrmTracks->SetCursorPos((int64_t)nBufferPlayPosition);
@@ -2754,6 +2760,8 @@ AnsiString SoundDllProMain::GetSoundFormatString()
 //------------------------------------------------------------------------------
 void SoundDllProMain::ShowPerformance()
 {
+   if (m_bNoGUI)
+      return;
    static int nCount = 0;
    bool bTracks   = m_pfrmTracks && m_pfrmTracks->Visible;
    bool bMixer    = m_pfrmMixer  && m_pfrmMixer->Visible;
