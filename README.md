@@ -32,9 +32,6 @@ You might need to adjust paths and/or 3rd party source code files and/or librari
 within the project files for a successful build. The project files each contain 
 two target platforms, Win32 and Win64 for 32bit and 64bit respectively
 
-This source code package does NOT include the MEX-related source files. These files
-are shipped with SoundMexPro itself in the subdirectory "mex" of the installation.
-
 Please extract the Development-directory conained in the archive to the installation 
 directory of SoundMexPro. Files from the "mex" directory of the installation will be
 needed for compiling SoundMexPro. Read the contained _README.txt carefully.
