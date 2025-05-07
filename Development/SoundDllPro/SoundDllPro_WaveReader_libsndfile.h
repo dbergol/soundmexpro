@@ -125,7 +125,7 @@ class SDPWaveReader : public TThread
       uint64_t          GetFileOffset();
       uint64_t          GetSamplesRead();
       uint64_t          GetLoopPosition();
-      float             GetFileSample();
+      float             GetFileSample(bool bFileReadLazy = false);
       uint64_t          FileSize();
       uint64_t          TotalLength();
       bool              Done();

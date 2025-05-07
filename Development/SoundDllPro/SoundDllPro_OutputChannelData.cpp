@@ -308,7 +308,13 @@ float SDPOutputData::GetSample(bool bNoRamp)
          {
          uLoopPosition = m_psdpwr->GetLoopPosition();
          // retrieve sample from file. NOTE: looping is done by class SDPWaveReader!
-         fValue = m_psdpwr->GetFileSample();
+         // Important note: here we pass the 'bNoRamp'-flag as 'bFileReadLazy': this
+         // function is called by wave data painting routine TTracksForm::UpdateWaveData()
+         // only with flag 'true': then GetSample is called way to fast for double-buffered
+         // file reading in SDPWaveReader to be quick enough: but in painting mode we may
+         // read file 'releaxed, i.e. wait for net buffer tio be filled for a while (see
+         // SDPWaveReader::GetFileSample)
+         fValue = m_psdpwr->GetFileSample(bNoRamp);
          // check if file is done now
          if (m_psdpwr->Done())
             m_bIsInUse = false;

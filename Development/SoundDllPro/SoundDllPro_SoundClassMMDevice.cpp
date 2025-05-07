@@ -149,7 +149,6 @@ SoundClassMMDevice::SoundClassMMDevice()
    InitializeCriticalSection(&m_csProcess);
 
    CoInitialize(NULL);
-
    ListDevices();
 
    // Create events
@@ -882,8 +881,11 @@ void SoundClassMMDevice::Process(void)
          if (FAILED(hr))
             throw Exception("error getting device buffer");
 
+
+
          // convert data
          InternalFloatBufferToDeviceBuffer(pData);
+
 
          // tell device that we're done with this buffer
          hr = m_pRenderClient->ReleaseBuffer(m_nBufsizeSamples, 0);
@@ -1099,9 +1101,10 @@ void SoundClassMMDevice::HtMMDeviceFormat2WaveFormatExtensible(WAVEFORMATEXTENSI
 }
 //------------------------------------------------------------------------------
 
+
 //------------------------------------------------------------------------------
 /// writes internal data from m_vvfBuffer to passed memory with respect to current
-/// audio format
+/// audio format including hardclipping
 /// NOTE: this part is implemented in separate function and NOT in ::Process
 /// for device independant unit testing!
 /// \param[out] pData pointer to destination memory
@@ -1110,7 +1113,6 @@ void SoundClassMMDevice::InternalFloatBufferToDeviceBuffer(BYTE *pData)
 {
    UINT32 nChannel, nFrame, nByte;
    UINT32 nNumChannels = (UINT32)SoundActiveChannels(OUTPUT);
-   int nValue;
    float fScale;
    // write zeroes to be sure that silence is played on any error
    ZeroMemory(pData, m_nBufsizeBytes);
@@ -1119,38 +1121,67 @@ void SoundClassMMDevice::InternalFloatBufferToDeviceBuffer(BYTE *pData)
    // 32-bit bormalized float: thats exactly the internal format
    if (m_dwfmt == MMD_WFMT_PCMIEEEFLOAT)
       {
+      float fValue;
       float* lp = (float*)pData;
       for (nFrame = 0; nFrame < m_nBufsizeSamples; nFrame++)
          {
          for (nChannel = 0; nChannel < nNumChannels; nChannel++)
-            *lp++ = m_vvfBuffer[nChannel][nFrame];
+            {
+            fValue = m_vvfBuffer[nChannel][nFrame];
+            if (fValue > 1.0f)
+               fValue = 1.0f;
+            else if (fValue < -1.0f)
+               fValue = -1.0f;
+
+            *lp++ = fValue;
+            }
          }
       }
    // 16-bit integer
    else if (m_dwfmt == MMD_WFMT_PCM16INT)
       {
+      int nValue;
       fScale = (float)(SHRT_MAX);
       short int* lp = (short int*)pData;
       for (nFrame = 0; nFrame < m_nBufsizeSamples; nFrame++)
          {
          for (nChannel = 0; nChannel < nNumChannels; nChannel++)
-            *lp++ = (short int)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            {
+            nValue = (int)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            if (nValue > SHORT_MAX)
+               nValue = SHORT_MAX;
+            else if (nValue < SHORT_MIN)
+               nValue = SHORT_MIN;
+
+            *lp++ = (short int)nValue;
+            }
          }
       }
    // 32bit or 24bit in 32bit container
    else if (m_dwfmt == MMD_WFMT_PCM32INT || m_dwfmt == MMD_WFMT_PCM2432INT)
       {
+      int64_t nValue;
       fScale = (float)(INT_MAX);
       int* lp = (int*)pData;
       for (nFrame = 0; nFrame < m_nBufsizeSamples; nFrame++)
          {
          for (nChannel = 0; nChannel < nNumChannels; nChannel++)
-            *lp++ = (int)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            {
+            nValue = (int64_t)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            if (nValue > INT_MAX)
+               nValue = INT_MAX;
+            else if (nValue < INT_MIN)
+               nValue = INT_MIN;
+
+            *lp++ = (int)nValue;
+            }
          }
       }
    // 24bit: Big Endian packed 24 Bits
    else if (m_dwfmt == MMD_WFMT_PCM24INT)
       {
+      int64_t nValue;
+      int nValue32;
       fScale = (float)(INT_MAX);
       signed char* lp = (signed char*)pData;
       signed char* lpVal;
@@ -1158,10 +1189,16 @@ void SoundClassMMDevice::InternalFloatBufferToDeviceBuffer(BYTE *pData)
          {
          for (nChannel = 0; nChannel < nNumChannels; nChannel++)
             {
+            nValue = (int64_t)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            if (nValue > INT_MAX)
+               nValue = INT_MAX;
+            else if (nValue < INT_MIN)
+               nValue = INT_MIN;
             // calculate value as int32 ...
-            nValue = (int)floor(m_vvfBuffer[nChannel][nFrame]*fScale);
+            nValue32 = (int)nValue;
+
             // ... and write 3 MSBs
-            lpVal = (signed char*)&nValue;
+            lpVal = (signed char*)&nValue32;
             for (nByte = 0; nByte < 3; nByte++)
                *lp++ = lpVal[nByte+1];
             }

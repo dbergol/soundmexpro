@@ -196,10 +196,8 @@ bool SDPRecFile::IsOpen()
 //------------------------------------------------------------------------------
 void SDPRecFile::WriteBuffer(std::valarray<float> &vaf)
 {
-   if (!m_bEnabled)
+   if (!m_bEnabled || !m_pfs)
       return;
-   if (!m_pfs)
-      throw Exception("error recording buffer to file (not open for writing): " + FileAndChannelStr());
 
    unsigned int nNumSamples = (unsigned int)vaf.size();
    unsigned int nReadPos = 0;

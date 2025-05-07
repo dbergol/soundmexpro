@@ -547,7 +547,7 @@ void SDPWaveReader::SetPosition(uint64_t nPosition)
 //------------------------------------------------------------------------------
 /// returns one sample
 //------------------------------------------------------------------------------
-float SDPWaveReader::GetFileSample()
+float SDPWaveReader::GetFileSample(bool bFileReadLazy)
 {
    m_bStarted = true;
    float fReturn = 0.0f;
@@ -573,6 +573,18 @@ float SDPWaveReader::GetFileSample()
             throw Exception("error setting load event");
          // switch
          m_nReadBufIndex = (int)(!(bool)m_nReadBufIndex);
+
+         // if we are called with bFileReadLazy == true, then we are allowed for other
+         // buffer to be ready again for a while (here: max 1 second)
+         if (bFileReadLazy)
+            {
+            DWORD dw = GetTickCount();
+            while (m_sdpWB[m_nReadBufIndex].m_wrbStatus != SDP_WAVEREADERBUFFERSTATUS_FILLED)
+               {
+               if (ElapsedSince(dw) > 1000)
+                  break;
+               }
+            }
 
          // check, if we are allowed to read the other buffer!
          if (m_sdpWB[m_nReadBufIndex].m_wrbStatus != SDP_WAVEREADERBUFFERSTATUS_FILLED)

@@ -161,7 +161,6 @@ SoundDllProMain::SoundDllProMain()
       m_nBufsizeFile2File(1024),
       m_nOutChannelsFile2File(2)
 {
-   OutputDebugString(__FUNC__);
    if (!IsAudioSpike())
       SetStyle();
       

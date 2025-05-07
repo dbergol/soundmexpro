@@ -253,6 +253,7 @@ void SDPInput::SaveBuffer(std::valarray<float> &vaf, bool bSaveToFile)
    if (!m_prfRecordFile)
       return;
 
+
    if (m_bSaveToFile && m_prfRecordFile->IsOpen() && m_prfRecordFile->Enabled())
       {
       m_bStarted = true;
