@@ -407,6 +407,16 @@ void CHtVSTEq::InitFilter()
 //--------------------------------------------------------------------------
 
 //--------------------------------------------------------------------------
+// overloaded base class function: re-initalizes equalizer form on samplerate change
+//--------------------------------------------------------------------------
+void CHtVSTEq::setSampleRate (float sampleRate)
+{
+   AudioEffectX::setSampleRate (sampleRate);
+   m_pfrmVisual->Initialize(m_nFFTLen, sampleRate);
+}
+//--------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------
 /// alloc memory and OLA
 //--------------------------------------------------------------------------
 void CHtVSTEq::InitOLA()
@@ -451,17 +461,12 @@ void CHtVSTEq::SpecProcessCallback(vvac & vvacSpectrum)
       if (m_pfrmVisual->Visible && !(iNumCallbacks % m_nUpdateInterval))
          m_vvacSpecPreFilter = vvacSpectrum;
 
-      //calculate new spectrum
-      // NOTE set DC (first BIN to 0!
-      unsigned int nChannel, n;
+      // calculate new spectrum
+      unsigned int nChannel;
       for (nChannel = 0; nChannel < m_nNumChannels; nChannel++)
          {
-         // NOTE: first bin in spec is DC Set it to 0!!
-         vvacSpectrum[nChannel][0] = 0;
-         for (n = 1; n < vvacSpectrum[nChannel].size(); n++)
-            vvacSpectrum[nChannel][n] *= m_vvacFilter[nChannel][n-1];
+         vvacSpectrum[nChannel] *= m_vvacFilter[nChannel];
          }
-
 
       if (m_pfrmVisual->Visible && !(iNumCallbacks % m_nUpdateInterval))
          {

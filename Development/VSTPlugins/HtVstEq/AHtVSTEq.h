@@ -75,7 +75,6 @@ class CHtVSTEq : public AudioEffectX
       bool m_bIsValid;
       int  m_nUpdateInterval;
 
-
       // Processes
       virtual void process (float **inputs, float **outputs, VstInt32 sampleFrames);
       virtual void processReplacing (float **inputs, float **outputs, VstInt32 sampleFrames);
@@ -86,6 +85,7 @@ class CHtVSTEq : public AudioEffectX
       virtual void getProgramName (char *name);
 
       // Parameters
+      virtual void setSampleRate (float sampleRate);
       virtual void setParameter (VstInt32 index, float value);
       virtual float getParameter (VstInt32 index);
       virtual void getParameterLabel (VstInt32 index, char *label);
