@@ -545,13 +545,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
                   std::string strLicValue = GetValue(vsRet, SOUNDDLLPRO_STR_Update);
                   mexPrintf("---------------------------------------------------------------------\n");
                   #ifdef BETAVERSION
-                  mexPrintf("\t\t\tSoundMexPro %s %s.%d BETA", GetValue(vsRet, SOUNDDLLPRO_STR_Type).c_str(), GetValue(vsRet, SOUNDDLLPRO_STR_Version).c_str(), SOUNDMEX_SUBVER);
+                  mexPrintf("\t\t\tSoundMexPro %s %s (%d) BETA", GetValue(vsRet, SOUNDDLLPRO_STR_Type).c_str(), GetValue(vsRet, SOUNDDLLPRO_STR_Version).c_str(), SOUNDMEX_SUBVER);
                   // print update error in brackets (if any)
                   if (strlen(strLicValue.c_str()))
                      mexPrintf(" (%s)", strLicValue.c_str());
                   mexPrintf("\n");
                   #else
-                  mexPrintf("\t\t\tSoundMexPro %s %s.%d", GetValue(vsRet, SOUNDDLLPRO_STR_Type).c_str(), GetValue(vsRet, SOUNDDLLPRO_STR_Version).c_str(), SOUNDMEX_SUBVER);
+                  mexPrintf("\t\t\tSoundMexPro %s %s (%d)", GetValue(vsRet, SOUNDDLLPRO_STR_Type).c_str(), GetValue(vsRet, SOUNDDLLPRO_STR_Version).c_str(), SOUNDMEX_SUBVER);
                   // print update error in brackets (if any)
                   if (strlen(strLicValue.c_str()))
                      mexPrintf(" (%s)", strLicValue.c_str());
@@ -649,14 +649,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
             // all other commands (not recgetdata or plugingetdata): standard processing of return values
             else
                {
-               // for 'version' we append the subversion to the value returned from DLL
+               // for 'version' we append the MEX subversion to the value returned from DLL in brackets
                if ( 0==_strcmpi(strCommand.c_str(), SOUNDDLLPRO_CMD_VERSION))
                   {
                   #ifdef BETAVERSION
-                  sprintf(sz, "%s.%d_BETA", GetValue(vsRet, SOUNDDLLPRO_STR_Version).c_str(), SOUNDMEX_SUBVER);
-                  SetValue(vsRet, SOUNDDLLPRO_STR_Version, (GetValue(vsRet, SOUNDDLLPRO_STR_Version) + "." + IntegerToStr(SOUNDMEX_SUBVER) + "_BETA").c_str());
+                  SetValue(vsRet, SOUNDDLLPRO_STR_Version, (GetValue(vsRet, SOUNDDLLPRO_STR_Version) + " (" + IntegerToStr(SOUNDMEX_SUBVER) + ") BETA").c_str());
                   #else
-                  SetValue(vsRet, SOUNDDLLPRO_STR_Version, (GetValue(vsRet, SOUNDDLLPRO_STR_Version) + "." + IntegerToStr(SOUNDMEX_SUBVER)).c_str());
+                  SetValue(vsRet, SOUNDDLLPRO_STR_Version, (GetValue(vsRet, SOUNDDLLPRO_STR_Version) + " (" + IntegerToStr(SOUNDMEX_SUBVER) + ")").c_str());
                   #endif
                   }
 

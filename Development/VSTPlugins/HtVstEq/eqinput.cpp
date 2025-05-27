@@ -64,6 +64,9 @@ __fastcall TfrmEqInput::TfrmEqInput(CHtVSTEq *pEqualizer)
    iOldXPos = -1;
    iCapturedValue = -1;
    bChanged = false;
+   m_nFFTLen = 0;
+   m_fSampleRate = 0.0f;
+
    SetPosCaption(0, 1);
 }
 //------------------------------------------------------------------------------
@@ -397,6 +400,13 @@ void __fastcall TfrmEqInput::EnableSpectra()
 //------------------------------------------------------------------------------
 void __fastcall TfrmEqInput::Initialize(unsigned int nFFTLen, float fSampleRate)
 {
+   // (re-)initialize only if properties have changed
+   if (m_nFFTLen == nFFTLen && (int)m_fSampleRate == (int)fSampleRate)
+      return;
+
+   m_nFFTLen = nFFTLen;
+   m_fSampleRate = fSampleRate;
+
    double dBinScale  = (double)fSampleRate / (double)nFFTLen;
    PreSpecSeriesL->Clear();
    PreSpecSeriesR->Clear();

@@ -87,6 +87,11 @@ __fastcall TTracksForm::TTracksForm(TComponent* Owner)
    m_bSeriesDarkTheme = m_bIsDarkTheme;
    m_bSeriesDarkTheme = false; 
 
+   #ifdef CURSORBYLINE
+   // see below in SetCursorPosInternal !
+   pbCursor->Visible = false;
+   #endif
+   pbCursor->Canvas->Pen->Mode = pmNot;
 }
 //------------------------------------------------------------------------------
 
@@ -96,20 +101,20 @@ __fastcall TTracksForm::TTracksForm(TComponent* Owner)
 __fastcall TTracksForm::~TTracksForm()
 {
    if (m_bPositionsRead)
-	  {
-	  try
-		 {
-		 SetProfileString("TrackViewLeft",   Left);
-		 SetProfileString("TrackViewTop",    Top);
-		 SetProfileString("TrackViewHeight", Height);
-		 SetProfileString("TrackViewWidth",  Width);
-		 SetProfileString("TrackViewSamples",  miSamples->Checked);
-		 }
-	  // clear exception silently
-	  catch (...)
-		 {
-		 }
-	  }
+      {
+      try
+         {
+         SetProfileString("TrackViewLeft",   Left);
+         SetProfileString("TrackViewTop",    Top);
+         SetProfileString("TrackViewHeight", Height);
+         SetProfileString("TrackViewWidth",  Width);
+         SetProfileString("TrackViewSamples",  miSamples->Checked);
+         }
+      // clear exception silently
+      catch (...)
+         {
+         }
+   }
    Clear();
    DeleteCriticalSection(&m_csTrackView);
 }
@@ -121,7 +126,7 @@ __fastcall TTracksForm::~TTracksForm()
 void __fastcall TTracksForm::Clear()
 {
    while (chrtTrack->SeriesList->Count > 0)
-	  RemoveChartSeries(chrtTrack->Series[0]);
+      RemoveChartSeries(chrtTrack->Series[0]);
 }
 //------------------------------------------------------------------------------
 
@@ -171,7 +176,7 @@ void TTracksForm::Init()
       unsigned int i;
       for (i = 0; i < m_vTrackInfos.size(); i++)
          TRYDELETENULL(m_vTrackInfos[i]);
-	  m_vTrackInfos.clear();
+      m_vTrackInfos.clear();
       // create new track infos
       for (i = 0; i < m_nNumTracks; i++)
          m_vTrackInfos.push_back(new TTrackInfoFrame(pnlTrackInfo, (int)i));
@@ -249,9 +254,9 @@ void TTracksForm::UpdateTracks(bool bZoomToAll, bool bShowWaveData)
 void TTracksForm::UpdateTrackInfos()
 {
    if (!TryEnterCriticalSection(&m_csTrackView))
-	  return;
+      return;
    try
-	  {
+      {
       if (!m_vTrackInfos.size())
          return;
       for (unsigned int n = 0; n < m_vTrackInfos.size(); n++)
@@ -284,12 +289,17 @@ void TTracksForm::SetCursorPosInternal()
    if (!Visible)
       return;
    pnlBottomLeft->Caption = CursorPosition();
+
    // 'scroll' window if cursor at the right of current view (only if playing)
    if (SoundClass()->DeviceIsRunning() && m_nCursorPosition > (m_nXViewStart + m_nXViewLen))
       {
       m_nXViewStart = m_nCursorPosition;
       AdjustHorizontalView();
       }
+
+   // CURSORBYLINE is more efficient, since only a line is drawn in NOT mode, but it's
+   // error prone: lines keep existing, even if they shouldn't....
+   #ifdef CURSORBYLINE
    // calculate cursor position in window
    // NOTE: here we paint a line by hand and do NOT use the cursor series: the repaint causes a
    // repaint of EVERYTHING which is to slow
@@ -307,6 +317,20 @@ void TTracksForm::SetCursorPosInternal()
       chrtTrack->Canvas->LineTo(nPos, chrtTrack->ChartRect.Bottom);
       CursorSeries->XValues->Value[1] = CursorSeries->XValues->Value[0];
       }
+   #else
+   // set position of a paintbox.
+   // calculate cursor position in window
+   if (m_nCursorPosition != (int64_t)CursorSeries->XValues->Value[0])
+      {
+      CursorSeries->XValues->Value[0] = m_nCursorPosition;
+      int nPos = chrtTrack->BottomAxis->CalcXPosValue(CursorSeries->XValues->Value[0]);
+      if (nPos > chrtTrack->ChartRect.Right || nPos < chrtTrack->ChartRect.Left)
+         return;
+      CursorSeries->XValues->Value[1] = CursorSeries->XValues->Value[0];
+      if (nPos + chrtTrack->Left != pbCursor->Left)
+         pbCursor->Left = nPos + chrtTrack->Left;
+      }
+   #endif
 }
 //------------------------------------------------------------------------------
 
@@ -352,11 +376,11 @@ void TTracksForm::SetTrackLevelsInternal(const std::valarray<float>& vaf)
 void TTracksForm::ResetTrackLevelsInternal()
 {
    for (unsigned int n = 0; n < m_vTrackInfos.size(); n++)
-	  {
-	  if (n >= m_vTrackInfos.size())
-		 break;
-	  m_vTrackInfos[n]->ResetLevel();
-	  }
+      {
+      if (n >= m_vTrackInfos.size())
+         break;
+      m_vTrackInfos[n]->ResetLevel();
+      }
 }
 //------------------------------------------------------------------------------
 
@@ -378,7 +402,7 @@ void __fastcall TTracksForm::pnlTracksResize(TObject *Sender)
 void __fastcall TTracksForm::btnVZoomInClick(TObject *Sender)
 {
    if (m_nNumVisibleTracks > 1)
-	  m_nNumVisibleTracks--;
+      m_nNumVisibleTracks--;
    AdjustVerticalView();
 }
 //------------------------------------------------------------------------------
@@ -521,7 +545,7 @@ void __fastcall TTracksForm::btnHZoomOutClick(TObject *Sender)
 void __fastcall TTracksForm::btnHZoomInClick(TObject *Sender)
 {
    if (m_nXViewLen < 1000)
-	  return;
+      return;
    m_nXViewLen /= 2;
    AdjustHorizontalView();
    SetCursorPosInternal();
@@ -671,9 +695,9 @@ void __fastcall TTracksForm::FormKeyDown(TObject *Sender, WORD &Key,
 	  TShiftState Shift)
 {
    if (Key == VK_ESCAPE)
-	  m_bBreak = true;
+      m_bBreak = true;
    else if (Key == VK_F5)
-	  miRefreshClick(NULL);
+      miRefreshClick(NULL);
 }
 //------------------------------------------------------------------------------
 
@@ -720,7 +744,7 @@ void __fastcall TTracksForm::chrtTrackGetAxisLabel(TChartAxis *Sender, TChartSer
 //------------------------------------------------------------------------------
 #pragma argsused
 void __fastcall TTracksForm::chrtTrackMouseDown(TObject *Sender, TMouseButton Button,
-		  TShiftState Shift, int X, int Y)
+         TShiftState Shift, int X, int Y)
 {
    if (  Button == mbLeft
       && Shift.Contains(ssCtrl)
@@ -1223,6 +1247,13 @@ float TTracksForm::GetSampleVis(TSampleData *psd, int64_t nDataPos)
       else if (nDataPos > (int64_t)(psd->m_nTotalLen - psd->m_nRampLen))
          dValue *= GetHanningRamp((unsigned int)((int64_t)psd->m_nTotalLen - nDataPos), (unsigned int)psd->m_nRampLen, true);
       }
+
+   // clip value for display
+   if (dValue > 1.0f)
+      dValue = 1.0f;
+   else if (dValue < -0.99f)
+      dValue = -0.99f;
+
    return dValue;
 }
 //------------------------------------------------------------------------------
@@ -1489,3 +1520,16 @@ void __fastcall TTracksForm::chrtTrackBeforeDrawSeries(TObject *Sender)
       }
 }
 //------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// OnPaint callback for cursor TPaintBox. Draws line fullheight (pbCursor pen
+/// style isset to pmNot in constructor
+//------------------------------------------------------------------------------
+#pragma argsused
+void __fastcall TTracksForm::pbCursorPaint(TObject *Sender)
+{
+   pbCursor->Canvas->MoveTo(0,0);
+   pbCursor->Canvas->LineTo(0,pbCursor->Height);
+}
+//------------------------------------------------------------------------------
+

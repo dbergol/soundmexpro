@@ -64,7 +64,6 @@ object formVersionCheck: TformVersionCheck
     Default = True
     ModalResult = 1
     TabOrder = 0
-    ExplicitTop = 381
   end
   object btnHP: TButton
     Left = 320
@@ -77,7 +76,6 @@ object formVersionCheck: TformVersionCheck
     Default = True
     TabOrder = 1
     OnClick = btnHPClick
-    ExplicitTop = 381
   end
   object gbVersionHistory: TGroupBox
     AlignWithMargins = True
@@ -94,9 +92,6 @@ object formVersionCheck: TformVersionCheck
     Font.Style = []
     ParentFont = False
     TabOrder = 2
-    ExplicitLeft = 0
-    ExplicitTop = 21
-    ExplicitWidth = 624
     object memVersionInfo: TMemo
       AlignWithMargins = True
       Left = 9
@@ -115,8 +110,6 @@ object formVersionCheck: TformVersionCheck
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 0
-      ExplicitTop = 22
-      ExplicitWidth = 604
     end
   end
 end

@@ -118,6 +118,7 @@ class CHtVSTEq : public AudioEffectX
       float                   m_fVisible;
       float                   m_fEdit;
       bool                    m_bMuted;
+      float                   m_fLogFreqAxis;
       vvac                    m_vvacFilter;
       vvac                    m_vvacSpecPreFilter;
       vvac                    m_vvacSpecPostFilter;
@@ -137,6 +138,7 @@ class CHtVSTEq : public AudioEffectX
       float                   m_fVisSpecFactor;
 
       TMemIniFile *m_pIni;
+      void EnsureFilter();
       void InitFilter();
       void InitOLA();
       void ExitOLA();

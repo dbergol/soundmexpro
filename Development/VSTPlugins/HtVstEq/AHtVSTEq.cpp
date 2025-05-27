@@ -68,7 +68,7 @@ CHtComplex  StrToComplex(AnsiString s);
 /// constructor: calls base class and initializes members
 //--------------------------------------------------------------------------
 CHtVSTEq::CHtVSTEq (audioMasterCallback audioMaster)
-   :  AudioEffectX (audioMaster, 1, 2), // programs, parameters
+   :  AudioEffectX (audioMaster, 1, 3), // programs, parameters
       m_bIsValid(false),
       m_nUpdateInterval(30),
       m_bComplex(false),
@@ -76,6 +76,7 @@ CHtVSTEq::CHtVSTEq (audioMasterCallback audioMaster)
       m_fEnabled(1.0f),
       m_fVisible(0.0f),
       m_bMuted(false),
+      m_fLogFreqAxis(false),
       m_pfrmVisual(NULL),
       m_pmsFileFilter(NULL),
       m_pOLA(NULL),
@@ -106,7 +107,6 @@ CHtVSTEq::CHtVSTEq (audioMasterCallback audioMaster)
 
       m_pfrmVisual = new TfrmEqInput(this);
 
-      InitFilter();
 
       ReadFilterNameFromIni();
 
@@ -168,10 +168,26 @@ void CHtVSTEq::getProgramName (char *name)
 #pragma argsused
 void CHtVSTEq::setParameter (VstInt32 index, float value)
 {
+   bool b;
    switch (index)
       {
-      case 0:  m_fEnabled = value; m_pfrmVisual->btnSkip->Down = (m_fEnabled <= 0.0f); break;
-      case 1:  m_fVisible = value; m_pfrmVisual->Visible = (m_fVisible > 0.5f); break;
+      case 0:  m_fEnabled = value;
+               m_pfrmVisual->btnSkip->Down = (m_fEnabled <= 0.0f);
+               break;
+      case 1:  m_fVisible = value;
+               b = (m_fVisible > 0.5f);
+               if (b)
+                  EnsureFilter();
+               m_pfrmVisual->Visible = b;
+               break;
+      case 2:  m_fLogFreqAxis = value;
+               b = (m_fLogFreqAxis > 0.5f);
+               if (b != m_pfrmVisual->cbLogFreq->Checked)
+                  {
+                  m_pfrmVisual->cbLogFreq->Checked = true;
+                  m_pfrmVisual->cbLogFreqClick(NULL);
+                  }
+               break;
       }
 }
 //--------------------------------------------------------------------------
@@ -186,6 +202,7 @@ float CHtVSTEq::getParameter (VstInt32 index)
       {
       case 0:  return m_fEnabled;
       case 1:  return m_fVisible;
+      case 2:  return m_fLogFreqAxis;
       }
    return 0.0f;
 }
@@ -202,6 +219,7 @@ void CHtVSTEq::getParameterName (VstInt32 index, char *label)
       {
       case 0:  strcpy (label, "enabled");  break;
       case 1:  strcpy (label, "visible");  break;
+      case 2:  strcpy (label, "logaxis");  break;
       }
 }
 //--------------------------------------------------------------------------
@@ -216,6 +234,7 @@ void CHtVSTEq::getParameterDisplay (VstInt32 index, char *text)
       {
       case 0:  sprintf(text, m_fEnabled > 0.5f ? "true" : "false"); break;
       case 1:  sprintf(text, m_fVisible > 0.5f ? "true" : "false"); break;
+      case 2:  sprintf(text, m_fLogFreqAxis > 0.5f ? "true" : "false"); break;
       }
 }
 //--------------------------------------------------------------------------
@@ -265,6 +284,7 @@ bool CHtVSTEq::getVendorString (char* text)
 //--------------------------------------------------------------------------
 VstInt32 CHtVSTEq::startProcess ()
 {
+   EnsureFilter();
    InitOLA();
    return 0;
 }
@@ -380,6 +400,17 @@ void CHtVSTEq::processReplacing (float **inputs, float **outputs, VstInt32 sampl
 }
 //--------------------------------------------------------------------------
 
+
+//--------------------------------------------------------------------------
+/// calls InitFilter() if it was never called before
+//--------------------------------------------------------------------------
+void CHtVSTEq::EnsureFilter()
+{
+   if (!m_vvacFilter.size())
+      InitFilter();
+}
+//--------------------------------------------------------------------------
+
 //--------------------------------------------------------------------------
 /// initialize data
 //--------------------------------------------------------------------------
@@ -412,7 +443,12 @@ void CHtVSTEq::InitFilter()
 void CHtVSTEq::setSampleRate (float sampleRate)
 {
    AudioEffectX::setSampleRate (sampleRate);
-   m_pfrmVisual->Initialize(m_nFFTLen, sampleRate);
+   EnsureFilter();
+   if (m_pfrmVisual)
+      {
+      m_pfrmVisual->Initialize(m_nFFTLen, sampleRate);
+      FilterToChart();
+      }
 }
 //--------------------------------------------------------------------------
 
@@ -461,18 +497,22 @@ void CHtVSTEq::SpecProcessCallback(vvac & vvacSpectrum)
       if (m_pfrmVisual->Visible && !(iNumCallbacks % m_nUpdateInterval))
          m_vvacSpecPreFilter = vvacSpectrum;
 
-      // calculate new spectrum
-      unsigned int nChannel;
+      //calculate new spectrum
+      unsigned int nChannel, n;
       for (nChannel = 0; nChannel < m_nNumChannels; nChannel++)
          {
-         vvacSpectrum[nChannel] *= m_vvacFilter[nChannel];
+         // first bin same factor than second
+         vvacSpectrum[nChannel][0] *= m_vvacFilter[nChannel][0];
+         for (n = 1; n < vvacSpectrum[nChannel].size(); n++)
+            vvacSpectrum[nChannel][n] *= m_vvacFilter[nChannel][n-1];
          }
+
 
       if (m_pfrmVisual->Visible && !(iNumCallbacks % m_nUpdateInterval))
          {
          // store post-processing spectrum
          m_vvacSpecPostFilter = vvacSpectrum;
-         // send a message to draww data
+         // enable timer for painting
          m_pfrmVisual->UpdateTimer->Tag = 1;
          }
       }
@@ -1020,10 +1060,11 @@ void CHtVSTEq::ReadFilterNameFromIni()
 {
    char c[4096];
    ZeroMemory(c, 4096);
-   GetModuleFileName(GetModuleHandle("HtVSTEqualizer2.dll"), c, 4096);
+   GetModuleFileName(GetModuleHandle("HtVSTEq.dll"), c, 4096);
    AnsiString strIni = ChangeFileExt(c, ".ini");
    if (!FileExists(strIni))
       return;
+   EnsureFilter();
    TIniFile *pIni = NULL;
    try
       {

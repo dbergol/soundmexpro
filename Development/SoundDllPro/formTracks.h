@@ -77,6 +77,7 @@ struct TSampleData
 };
 //------------------------------------------------------------------------------
 
+
 //------------------------------------------------------------------------------
 /// form sfor visualization of audio tracks
 //------------------------------------------------------------------------------
@@ -118,6 +119,7 @@ class TTracksForm : public TForm
       TChart *chrtTrack;
       TLineSeries *DummySeries;
       TFastLineSeries *CursorSeries;
+      TPaintBox *pbCursor;
       void __fastcall pnlTracksResize(TObject *Sender);
       void __fastcall btnVZoomInClick(TObject *Sender);
       void __fastcall btnVZoomOutClick(TObject *Sender);
@@ -138,6 +140,7 @@ class TTracksForm : public TForm
           int ValueIndex, UnicodeString &LabelText);
       void __fastcall chrtTrackMouseDown(TObject *Sender, TMouseButton Button, TShiftState Shift,
           int X, int Y);
+      void __fastcall pbCursorPaint(TObject *Sender);
    private:	// Anwender-Deklarationen
       unsigned int   m_nNumTracks;           ///< total number of tracks
       unsigned int   m_nNumVisibleTracks;    ///< number of visible tracks

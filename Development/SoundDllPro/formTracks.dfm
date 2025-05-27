@@ -189,8 +189,19 @@ object TracksForm: TTracksForm
         PopupMenu = mnuTimeLine
         TabOrder = 0
         OnMouseDown = chrtTrackMouseDown
+        DesignSize = (
+          817
+          494)
         DefaultCanvas = 'TGDIPlusCanvas'
         ColorPaletteIndex = 0
+        object pbCursor: TPaintBox
+          Left = 0
+          Top = 2
+          Width = 2
+          Height = 490
+          Anchors = [akTop, akBottom]
+          OnPaint = pbCursorPaint
+        end
         object DummySeries: TLineSeries
           HorizAxis = aTopAxis
           Brush.BackColor = clDefault
@@ -202,7 +213,9 @@ object TracksForm: TTracksForm
           YValues.Order = loNone
         end
         object CursorSeries: TFastLineSeries
-          SeriesColor = clBlack
+          SeriesColor = clRed
+          FastPen = True
+          LinePen.Color = clRed
           LinePen.Mode = pmNot
           XValues.Name = 'X'
           XValues.Order = loAscending

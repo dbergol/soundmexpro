@@ -57,9 +57,10 @@ void  CheckForUpdate(TForm* pfrmOwner)
       return;      
       }
 
-   UnicodeString usVersion = VString() + ".0";
-   // uncomment to set older version for testing ....  
+   UnicodeString usVersion = VString();
+   // uncomment to set older version for testing ....
    // usVersion = "2.8.0.0";
+  //   usVersion = "3.2.4.0";
       
    if (vch.VersionIsLatest(usVersion))
       MessageBoxW(hwnd, L"You are running the latest version of SoundMexPro", L"Information", MB_ICONINFORMATION);
@@ -82,7 +83,7 @@ AnsiString  GetLatestVersion(bool &rbUpdate)
    if (vch.ReadVersionHistoryURL("https://www.soundmexpro.de/downloads/history.txt"))
       {
       asReturn = vch.GetVersionLatest();
-      rbUpdate = !vch.VersionIsLatest(VString()+".0");
+      rbUpdate = !vch.VersionIsLatest(VString());
       // uncomment to set older version for testing ....  
       // rbUpdate = !vch.VersionIsLatest("2.9.0.0");
       }
@@ -681,11 +682,14 @@ AnsiString GetFileVersion(HINSTANCE hLib)
       return as;
       }
 
-   as.sprintf( "%d.%d.%d",
+
+   as.sprintf( "%d.%d.%d.%d",
                pvi->dwProductVersionMS >> 16,
                pvi->dwFileVersionMS & 0xFFFF,
-               pvi->dwFileVersionLS >> 16
-             );
+               pvi->dwFileVersionLS >> 16,
+               pvi->dwFileVersionLS & 0xFFFF
+            );
+
 
    delete[] buf;
    return as;

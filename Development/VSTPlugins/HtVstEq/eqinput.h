@@ -114,6 +114,8 @@ class TfrmEqInput : public TForm
       int iCapturedValue;   
       bool bChanged;
       CHtVSTEq *m_pEqualizer;
+      unsigned int m_nFFTLen;
+      float m_fSampleRate;
       void  SetPosCaption(double dX, double dY);
    public:		// Anwender-Deklarationen
       __fastcall TfrmEqInput(CHtVSTEq *pEqualizer);
