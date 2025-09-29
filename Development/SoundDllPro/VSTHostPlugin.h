@@ -57,9 +57,6 @@
 
 #include "VSTVendorDefs.h"
 
-#define TRYDELETENULL(p) {if (p!=NULL) { try {delete p;} catch (...){;} p = NULL;}}
-
-
 
 typedef std::vector<std::valarray<float> > vvfVST;
 

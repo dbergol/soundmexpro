@@ -350,7 +350,7 @@ static struct CMD_ARG
 {  SOUNDDLLPRO_CMD_CHECKUPDATE,                                         // cmd
    "Name> " SOUNDDLLPRO_CMD_CHECKUPDATE "\n"                            // help
    "Help> returns latest available SoundMexPro version from website\n"
-   "Ret.> Update:   1 if an update is available or else\n"   
+   "Ret.> Update:   1 if an update is available or 0 else\n"
    "      Version:  version string of latest available version",   
    "",                                                                  // arguments
    CheckUpdate,                                                         // function pointer
@@ -440,7 +440,7 @@ static struct CMD_ARG
 {  SOUNDDLLPRO_CMD_UPDATETRACKS,                                        // cmd
    "Name> " SOUNDDLLPRO_CMD_UPDATETRACKS "\n"                           // help
    "Help> updates visualization of files/vectors in tracks. NOTE: this \n"
-   "      command must be called to have the loaded files and vectors'up\n"
+   "      command must be called to have the loaded files and vectors 'up\n"
    "      to date'. It is recommended to call it directly before 'play'.\n"
    "Par.> wavedata:     if set to '1' waveforms are painted as well.\n"
    "                    NOTE: this might take quite a while...\n"
