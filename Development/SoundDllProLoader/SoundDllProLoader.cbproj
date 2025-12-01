@@ -119,9 +119,9 @@
         <UWP_CppLogo150>$(BDS)\bin\Artwork\Windows\UWP\cppreg_UwpDefault_150.png</UWP_CppLogo150>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64x)'!=''">
@@ -146,18 +146,18 @@
         <LinkPackageImports>rtl.bpi;vcl.bpi</LinkPackageImports>
         <BCC_UserSuppliedOptions>-fdiagnostics-show-option -fcomment-block-commands=retval -fcomment-block-commands=exception -Wno-language-extension-token -Wno-unused-variable -Wno-return-type-c-linkage -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-zero-as-null-pointer-constant -Wno-old-style-cast -Wno-nonportable-system-include-path </BCC_UserSuppliedOptions>
         <ILINK_DisableIncrementalLinking>true</ILINK_DisableIncrementalLinking>
+        <Icon_MainIcon>SoundDllProLoader_Icon.ico</Icon_MainIcon>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
         <IntermediateOutputDir>obj64</IntermediateOutputDir>
         <BCC_UserSuppliedOptions>-fdiagnostics-show-option -fcomment-block-commands=retval -fcomment-block-commands=exception -Wno-language-extension-token -Wno-unused-variable -Wno-return-type-c-linkage -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-zero-as-null-pointer-constant -Wno-old-style-cast -Wno-nonportable-system-include-path </BCC_UserSuppliedOptions>
         <FinalOutputDir>..\..\bin64\</FinalOutputDir>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_MajorVer>1</VerInfo_MajorVer>
         <VerInfo_MinorVer>0</VerInfo_MinorVer>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <LinkPackageImports>rtl.bpi;vcl.bpi</LinkPackageImports>
+        <Icon_MainIcon>SoundDllProLoader_Icon.ico</Icon_MainIcon>
         <ILINK_DisableIncrementalLinking>true</ILINK_DisableIncrementalLinking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win64x)'!=''">

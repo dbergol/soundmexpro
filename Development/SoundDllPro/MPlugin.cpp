@@ -267,6 +267,7 @@ void __fastcall TMPlugin::Init(bool bRealtimePriority)
    AnsiString strMatlabCommand = m_mps.strMatlab;
    if (strMatlabCommand.Pos("matlab.exe") != 0)
       {
+      strMatlabCommand += " -nodesktop";
       if (!m_mps.bJVM)
          strMatlabCommand += " -nojvm";
       strMatlabCommand += " -nosplash -r";

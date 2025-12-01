@@ -2218,10 +2218,13 @@ void CAsio::LoadDriver(AnsiString sDriverName, size_t nIndex, void * lpSysRef)
            sizeof(m_padiDriverInfo->errorMessage));
     m_padiDriverInfo->sysRef = lpSysRef;
 
-    if (CAsio::sm_etExceptionTrigger == CAsio::LOAD_DRIVER_THROWS_LOAD_ERROR_LD
-        ||
-        m_padAsioDrivers->loadDriver(const_cast<char*>(sDriverName.c_str()))
-        == false)
+
+    if (CAsio::sm_etExceptionTrigger == CAsio::LOAD_DRIVER_THROWS_LOAD_ERROR_LD)
+    {
+        throw ELoadError("CAsio::LoadDriver", "Cannot load Asio driver (LOAD_DRIVER_THROWS_LOAD_ERROR_LD)");
+    }
+
+    if (m_padAsioDrivers->loadDriver(const_cast<char*>(sDriverName.c_str())) == false)
     {
         throw ELoadError("CAsio::LoadDriver", "Cannot load Asio driver");
     }

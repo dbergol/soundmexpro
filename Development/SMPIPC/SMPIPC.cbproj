@@ -79,7 +79,6 @@
         <IncludePath>$(BDSINCLUDE)\windows\vcl;$(IncludePath)</IncludePath>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BCC_PCHName_Clang>Project2PCH1.h</BCC_PCHName_Clang>
@@ -93,7 +92,6 @@
         <IncludePath>$(BDSINCLUDE)\windows\vcl;$(IncludePath)</IncludePath>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <BCC_PCHName_Clang>Project2PCH1.h</BCC_PCHName_Clang>
@@ -117,7 +115,6 @@
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <LinkPackageImports>rtl.bpi;vcl.bpi</LinkPackageImports>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <FinalOutputDir>..\..\bin</FinalOutputDir>
         <IntermediateOutputDir>obj</IntermediateOutputDir>
@@ -132,7 +129,6 @@
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <FinalOutputDir>..\..\bin64</FinalOutputDir>
         <IntermediateOutputDir>obj64</IntermediateOutputDir>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <BCC_UserSuppliedOptions>-fdiagnostics-show-option -fcomment-block-commands=retval -fcomment-block-commands=exception -Wno-language-extension-token -Wno-unused-variable -Wno-return-type-c-linkage -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-zero-as-null-pointer-constant -Wno-old-style-cast -Wno-nonportable-system-include-path </BCC_UserSuppliedOptions>
         <LinkPackageImports>rtl.bpi;vcl.bpi</LinkPackageImports>
