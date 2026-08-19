@@ -189,7 +189,9 @@ int cdecl SoundDllProCommand(const char* lpcszCommand, char* lpszReturnValue, in
             // check command namd and function pointer
             if ( NULL==lpArg->lpszName || NULL==lpArg->lpfn) // end of arg list ?
                throw Exception("Command not found in sounddllpro");
-            AnsiString strArgs = lpArg->lpszArgs;
+            // get allowed args as comma-separated list with PREPENDING a comma as well:
+            //we want to search for ,ARG,  below to find only full commands!
+            AnsiString strArgs = "," + AnsiString(lpArg->lpszArgs);
             // check, if all arguments are known
             if (strcmpi(lpArg->lpszName, SOUNDDLLPRO_CMD_BETATEST))
                {
@@ -198,7 +200,7 @@ int cdecl SoundDllProCommand(const char* lpcszCommand, char* lpszReturnValue, in
                   // argument 'command' (i.e. commandname) is always known
                   if (!strcmpi(AnsiString(psl->Names[i]).c_str(), SOUNDDLLPRO_STR_COMMAND))
                      continue;
-                  if (strArgs.Pos(psl->Names[i] + ",") == 0)
+                  if (strArgs.Pos("," + psl->Names[i] + ",") == 0)
                      throw Exception("unknown parameter '" + psl->Names[i] + "' passed");
                   }
                }
