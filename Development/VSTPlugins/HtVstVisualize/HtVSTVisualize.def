@@ -1,3 +1,4 @@
 LIBRARY         HtVSTVisualize
 DESCRIPTION     'Visualize'
-EXPORTS         main=_main
+EXPORTS         VSTPluginMain=_VSTPluginMain
+                main=_VSTPluginMain

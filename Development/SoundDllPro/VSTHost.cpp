@@ -585,7 +585,7 @@ void TVSTHost::ProcessST(vvfVST& vvfBuffers)
                nPluginChannelsOut = (unsigned int)vvfOut.size();
                for (nMappedChannel = 0; nMappedChannel < nMappedChannelsOut; nMappedChannel++)
                   {
-                  if (nMappedChannel > nPluginChannelsOut)
+                  if (nMappedChannel >= nPluginChannelsOut)
                      break;
                   if (viMappingOut[nMappedChannel] < (int)nChannels)
                      m_vvfInternalBuffers[(unsigned int)viMappingOut[nMappedChannel]] += vvfOut[nMappedChannel];
@@ -742,7 +742,7 @@ void TVSTHost::ProcessMT(vvfVST& vvfBuffers)
                nPluginChannelsOut = (unsigned int)vvfOut.size();
                for (nMappedChannel = 0; nMappedChannel < nMappedChannelsOut; nMappedChannel++)
                   {
-                  if (nMappedChannel > nPluginChannelsOut)
+                  if (nMappedChannel >= nPluginChannelsOut)
                      break;
                   if (viMappingOut[nMappedChannel] < (int)nChannels)
                      m_vvfInternalBuffers[(unsigned int)viMappingOut[nMappedChannel]] += vvfOut[nMappedChannel];

@@ -37,7 +37,7 @@
 #include <Forms.hpp>
 #include <ComCtrls.hpp>
 
-class AEffect;
+struct AEffect;
 
 //------------------------------------------------------------------------------
 /// Class holding VST-Plugin properties

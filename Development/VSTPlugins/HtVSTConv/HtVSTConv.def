@@ -1,3 +1,4 @@
 LIBRARY         HtVSTConv
 DESCRIPTION     'Convolver'
 EXPORTS         VSTPluginMain=_VSTPluginMain
+                main=_VSTPluginMain

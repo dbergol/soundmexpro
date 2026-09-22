@@ -1,3 +1,4 @@
 LIBRARY         HtVSTGain
 DESCRIPTION     'VSTGAIN'
 EXPORTS         VSTPluginMain=VSTPluginMain
+                main=VSTPluginMain

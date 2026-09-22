@@ -1,3 +1,4 @@
 LIBRARY         HtVSTSine
 DESCRIPTION     'Sine'
 EXPORTS         VSTPluginMain=_VSTPluginMain
+                main=_VSTPluginMain

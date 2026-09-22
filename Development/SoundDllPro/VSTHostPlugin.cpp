@@ -145,8 +145,8 @@ TVSTHostPlugin::TVSTHostPlugin(  AnsiString                 strLibName,
          )
          throw Exception("VST synthesizer plugins not supported");
 
-      // 23-03.2009: moved up and changed order: set samplerate and blocksize
-      // before opening it!!
+      // set samplerate and blocksize
+      //
       m_pEffect->dispatcher(m_pEffect, effSetSampleRate, 0, 0, 0, fSampleRate);
       m_pEffect->dispatcher(m_pEffect, effSetBlockSize, 0, nBlockSize, 0, 0);
       m_pEffect->dispatcher(m_pEffect, effOpen, 0, 0, 0, 0);
