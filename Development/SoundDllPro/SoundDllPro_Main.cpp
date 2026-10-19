@@ -2609,6 +2609,7 @@ void SoundDllProMain::VSTQueryPlugin(TStringList *psl)
             std::vector<TVSTNode > vi;
             std::vector<int > vo;
             pPlugin = new TVSTHostPlugin( strFileName,
+                                          TVSTHost::VSTHostCallback,
                                           (float)SoundGetSampleRate(),
                                           (int)SoundBufsizeSamples(),
                                           vi,

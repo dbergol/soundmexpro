@@ -1,15 +1,15 @@
 //------------------------------------------------------------------------------
 /// \file VSTHostPlugin.cpp
 /// \author Berg
-/// \brief Implementation of classes TVSTThread and TVSTHostPlugin.
-/// Encapsulates one VST-plugin
+/// \brief Implementation of classes TVSTPluginEditor and TVSTHostPlugin.
+/// Encapsulates one VST-plugin and a parameter editor for a VST-plugin
 ///
 /// Project SoundMexPro
 /// Module  SoundDllPro.dll
 ///
 ///
 /// ****************************************************************************
-/// Copyright 2026 Daniel Berg, Oldenburg, Germany
+/// Copyright 2023 Daniel Berg, Oldenburg, Germany
 /// ****************************************************************************
 ///
 /// This file is part of SoundMexPro.
@@ -39,11 +39,12 @@
 #pragma hdrstop
 #include "VSTHostPlugin.h"
 #include "VSTHost.h"
-#include "VST2PluginImpl.h"
-#include "VST3PluginImpl.h"
 #include "SoundDllPro_Tools.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
+#pragma link "VSTParameterFrame"
+#pragma resource "*.dfm"
+
 
 //------------------------------------------------------------------------------
 /// TVSTThread. thread class for a plugin
@@ -90,11 +91,10 @@ void __fastcall TVSTThread::Execute()
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// constructor. Detects the plugin format (VST2 DLL vs. VST3 module) and
-/// creates the matching format-specific implementation, then retrieves
-/// it's properties
+/// constructor. Loads plugin by name (DLL) and retrieves it's properties
 //------------------------------------------------------------------------------
 TVSTHostPlugin::TVSTHostPlugin(  AnsiString                 strLibName,
+                                 audioMasterCallback        HostCallback,
                                  float                      fSampleRate,
                                  int                        nBlockSize,
                                  const std::vector<TVSTNode>&  vMappingIn,
@@ -103,12 +103,14 @@ TVSTHostPlugin::TVSTHostPlugin(  AnsiString                 strLibName,
                                  TThreadPriority            tpThreadPriority)
    :
       m_strLibName(strLibName),
-      m_pImpl(NULL),
+      m_pEffect(NULL),
       m_pProcThread(NULL),
+      m_lpcszUserConfig(NULL),
       m_bBypass(false),
-      m_kPlugCategory(vpcUnknown),
+      m_kPlugCategory(kPlugCategUnknown),
       m_pslPrograms(NULL),
       m_pslParams(NULL),
+      m_hLib(NULL),
       m_pfrmEditor(NULL),
       m_pfrmProperties(NULL),
       m_nBlockSize(nBlockSize)
@@ -121,33 +123,52 @@ TVSTHostPlugin::TVSTHostPlugin(  AnsiString                 strLibName,
       for (int i = 0; i < PLUG_EVENT_LAST; i++)
          m_hProcEvents[i] = 0;
 
-      // create the format-specific implementation: VST3 modules export
-      // 'GetPluginFactory' - everything else is assumed to be a VST2 DLL.
-      // Neither implementation needs an externally supplied host callback
-      // (CVST2PluginImpl uses its own VSTHostCallback() internally).
-      if (CVST3PluginImpl::IsVST3Module(strLibName))
-         m_pImpl = new CVST3PluginImpl(strLibName, fSampleRate, nBlockSize);
-      else
-         m_pImpl = new CVST2PluginImpl(strLibName, fSampleRate, nBlockSize);
+      m_hLib = LoadLibrary(strLibName.c_str());
+      if (!m_hLib)
+         throw Exception("Failed to load VST Plugin library '" + strLibName + "'!");
 
-      if ((int)vMappingIn.size() > m_pImpl->GetNumInputs())
+      PluginEntryProc mainEntry = (PluginEntryProc)GetProcAddress (m_hLib, "VSTPluginMain");
+      if (!mainEntry)
+         mainEntry = (PluginEntryProc)GetProcAddress (m_hLib, "main");
+      if (!mainEntry)
+         throw Exception("VST Plugin main entry not found!");
+
+      m_pEffect = mainEntry(HostCallback);
+      if (!m_pEffect)
+         throw Exception("Failed to create effect instance!");
+
+      if (m_pEffect->magic != kEffectMagic)
+         throw Exception("Library is not a valid VST plugin!");
+
+      if (  m_pEffect->dispatcher(m_pEffect,effGetVstVersion,0,0,NULL,0.0f) >= 2
+         && !!(m_pEffect->flags & effFlagsIsSynth)
+         )
+         throw Exception("VST synthesizer plugins not supported");
+
+      // set samplerate and blocksize
+      //
+      m_pEffect->dispatcher(m_pEffect, effSetSampleRate, 0, 0, 0, fSampleRate);
+      m_pEffect->dispatcher(m_pEffect, effSetBlockSize, 0, nBlockSize, 0, 0);
+      m_pEffect->dispatcher(m_pEffect, effOpen, 0, 0, 0, 0);
+
+      if ((int)vMappingIn.size() > m_pEffect->numInputs)
          throw Exception(  IntToStr((int)vMappingIn.size())
                         +  " input channels requested from VST plugin that has only "
-                        +  IntToStr(m_pImpl->GetNumInputs())
+                        +  IntToStr((int)m_pEffect->numInputs)
                         +  " inputs");
 
-      if ((int)viMappingOut.size() > m_pImpl->GetNumOutputs())
+      if ((int)viMappingOut.size() > m_pEffect->numOutputs)
          throw Exception(  IntToStr((int)viMappingOut.size())
                         +  " output channels requested from VST plugin that has only "
-                        +  IntToStr(m_pImpl->GetNumOutputs())
+                        +  IntToStr((int)m_pEffect->numOutputs)
                         +  " outputs");
-
+      
 
       // set vector/valarray sizes
-      m_vvafIn.resize((unsigned int)m_pImpl->GetNumInputs());
-      m_vapfIn.resize((unsigned int)m_pImpl->GetNumInputs());
-      m_vvafOut.resize((unsigned int)m_pImpl->GetNumOutputs());
-      m_vapfOut.resize((unsigned int)m_pImpl->GetNumOutputs());
+      m_vvafIn.resize((unsigned int)m_pEffect->numInputs);
+      m_vapfIn.resize((unsigned int)m_pEffect->numInputs);
+      m_vvafOut.resize((unsigned int)m_pEffect->numOutputs);
+      m_vapfOut.resize((unsigned int)m_pEffect->numOutputs);
 
       // check mapping vectors
       unsigned int i;
@@ -209,18 +230,30 @@ TVSTHostPlugin::~TVSTHostPlugin()
 }
 //------------------------------------------------------------------------------
 
+
 //------------------------------------------------------------------------------
 /// calls vendor specific VST function passing a pointer to a string as first
 /// long parameter. Return value is interpreted as pointer to string as well
 //------------------------------------------------------------------------------
 bool TVSTHostPlugin::SetUserConfig(AnsiString& as)
 {
-   return m_pImpl->SetUserConfig(as);
+   const int nBufferSize = 20*USHRT_MAX;
+   int nReturn = 0;
+   if (m_pEffect)
+      {
+      if (!m_lpcszUserConfig)
+         m_lpcszUserConfig = new char[nBufferSize];
+      ZeroMemory(m_lpcszUserConfig, nBufferSize);
+      // pass pointer to zero terminated string as input data and pointer to character array and length for return
+      nReturn = (int)m_pEffect->dispatcher(m_pEffect, effVendorSpecific, HT_VST_VENDOR_USERCONFIG, (VstIntPtr)as.c_str(), m_lpcszUserConfig, nBufferSize-1);
+      as = m_lpcszUserConfig;
+      }
+   return nReturn != 0;
 }
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// deletes member classes, buffers. Deactivates plugin and unloads implementation
+/// deletes member classes, buffers. Deactivates plugin and unloads library
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::Cleanup()
 {
@@ -230,9 +263,21 @@ void TVSTHostPlugin::Cleanup()
    TRYDELETENULL(m_pslParams);
    try
       {
-      // deleting the implementation stops processing, closes and unloads
-      // the plugin (see CVST2PluginImpl::Cleanup())
-      TRYDELETENULL(m_pImpl);
+      if (m_hLib)
+         {
+         try
+            {
+            if (m_pEffect)
+               {
+               Stop();
+               m_pEffect->dispatcher(m_pEffect, effClose, 0, 0, 0, 0);
+               }
+            }
+         catch (...)
+            {
+            }
+         FreeLibrary(m_hLib);
+         }
 
       if (m_pProcThread)
          {
@@ -254,6 +299,19 @@ void TVSTHostPlugin::Cleanup()
    catch (...)
       {
       }
+   m_hLib = NULL;
+   m_pEffect = NULL;
+
+   if (m_lpcszUserConfig)
+      {
+      try
+         {
+         delete [] m_lpcszUserConfig;
+         }
+      catch (...)
+         {
+         }
+      }
 }
 //------------------------------------------------------------------------------
 
@@ -262,7 +320,7 @@ void TVSTHostPlugin::Cleanup()
 //------------------------------------------------------------------------------
 int TVSTHostPlugin::GetNumInputs()
 {
-   return m_pImpl->GetNumInputs();
+   return m_pEffect->numInputs;
 }
 //------------------------------------------------------------------------------
 
@@ -271,20 +329,50 @@ int TVSTHostPlugin::GetNumInputs()
 //------------------------------------------------------------------------------
 int TVSTHostPlugin::GetNumOutputs()
 {
-   return m_pImpl->GetNumOutputs();
+   return m_pEffect->numOutputs;
 }
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// returns number of inputs and outputs for a plugin module/DLL, without
-/// instantiating it permanently
+/// returns number of inputs and outputs for a DLL
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::GetNumChannels(AnsiString strLibName, int &nNumIn, int &nNumOut)
 {
-   if (CVST3PluginImpl::IsVST3Module(strLibName))
-      CVST3PluginImpl::GetNumChannels(strLibName, nNumIn, nNumOut);
-   else
-      CVST2PluginImpl::GetNumChannels(strLibName, nNumIn, nNumOut);
+   HINSTANCE hLib = NULL;
+   nNumIn = 0;
+   nNumOut = 0;
+   try
+      {
+      hLib = LoadLibrary(strLibName.c_str());
+      if (!hLib)
+         throw Exception("Failed to load VST Plugin library '" + strLibName + "'!");
+      PluginEntryProc mainEntry = (PluginEntryProc)GetProcAddress (hLib, "TVSTHostPluginMain");
+      if (!mainEntry)
+         mainEntry = (PluginEntryProc)GetProcAddress (hLib, "main");
+      if (!mainEntry)
+         throw Exception("VST Plugin main entry not found!");
+
+      AEffect* pEffect = mainEntry(TVSTHost::VSTHostCallback);
+      if (!pEffect)
+         throw Exception("Failed to create effect instance!");
+      nNumIn   = pEffect->numInputs;
+      nNumOut  = pEffect->numOutputs;
+      // NOTE: effClose MUST be called to shut down plugin properly!!
+      pEffect->dispatcher(pEffect, effClose, 0, 0, 0, 0);
+      }
+   __finally
+      {
+      try
+         {
+         if (hLib)
+            {
+            FreeLibrary(hLib);
+            }
+         }
+      catch (...)
+         {
+         }
+      }
 }
 //------------------------------------------------------------------------------
 
@@ -318,9 +406,15 @@ void TVSTHostPlugin::GetProperties()
    m_pslParams->Clear();
 
    // retrieve effect name, vendor and product
-   m_strEffectName      = m_pImpl->GetEffectName();
-   m_strVendorString    = m_pImpl->GetVendorString();
-   m_strProductString   = m_pImpl->GetProductString();
+   char sz[256] = {0};
+   m_pEffect->dispatcher(m_pEffect, effGetEffectName, 0, 0, sz, 0);
+   m_strEffectName = sz;
+   ZeroMemory(sz, 256);
+   m_pEffect->dispatcher(m_pEffect, effGetVendorString, 0, 0, sz, 0);
+   m_strVendorString = sz;
+   ZeroMemory(sz, 256);
+   m_pEffect->dispatcher(m_pEffect, effGetProductString, 0, 0, sz, 0);
+   m_strProductString = sz;
 
    // NOTE: internally program names and property names are stored in comma-separated lists.
    // This would lead to problems, if these names contain commas. This never happened up to now
@@ -328,32 +422,39 @@ void TVSTHostPlugin::GetProperties()
 
    // Iterate programs and store names in string list
    AnsiString as;
-   int nNumPrograms = m_pImpl->GetNumPrograms();
-   for (int nProgIndex = 0; nProgIndex < nNumPrograms; nProgIndex++)
+   for (VstInt32 nProgIndex = 0; nProgIndex < m_pEffect->numPrograms; nProgIndex++)
       {
-      as = Trim(m_pImpl->GetProgramNameAt(nProgIndex));
+      ZeroMemory(sz, 256);
+      if (!m_pEffect->dispatcher(m_pEffect, effGetProgramNameIndexed, nProgIndex, 0, sz, 0))
+         {
+         m_pEffect->dispatcher(m_pEffect, effSetProgram, 0, nProgIndex, 0, 0); // Note: old program not restored here!
+         m_pEffect->dispatcher(m_pEffect, effGetProgramName, 0, 0, sz, 0);
+         }
+      as = Trim(AnsiString(sz));
       if (as.Pos(",") > 0)
          throw Exception("VST Plugin '" + m_strLibName + "' cannot be used (program names contain commas)");
 
       m_pslPrograms->Add(as);
       }
-   // restore program 0 (if any - avoids an unnecessary/invalid SetProgram
-   // call for plugins without programs)
-   if (nNumPrograms > 0)
-      m_pImpl->SetProgram(0);
+   // restore program 0
+   m_pEffect->dispatcher(m_pEffect, effSetProgram, 0, 0, 0, 0);
 
 
    // Iterate parameters and store names in string list
-   int nNumParams = m_pImpl->GetNumParams();
-   for (int nParamIndex = 0; nParamIndex < nNumParams; nParamIndex++)
+   for (VstInt32 nParamIndex = 0; nParamIndex < m_pEffect->numParams; nParamIndex++)
       {
-      as = Trim(m_pImpl->GetParamNameAt(nParamIndex));
+      ZeroMemory(sz, 256);
+      m_pEffect->dispatcher(m_pEffect, effGetParamName, nParamIndex, 0, sz, 0);
+      as = Trim(AnsiString(sz));
       if (as.Pos(",") > 0)
          throw Exception("VST Plugin '" + m_strLibName + "' cannot be used (parameter names contain commas)");
-      m_pslParams->Add(as);
+      m_pslParams->Add(Trim(AnsiString(sz)));
       }
 
-   m_kPlugCategory = m_pImpl->GetCategory();
+   m_bCanReplacing = (m_pEffect->flags & effFlagsCanReplacing) != 0;
+
+
+   m_kPlugCategory = (VstPlugCategory)m_pEffect->dispatcher(m_pEffect, effGetPlugCategory, 0, 0, 0, 0);
 }
 //------------------------------------------------------------------------------
 
@@ -371,7 +472,15 @@ void TVSTHostPlugin::Start(float fSampleRate, int nBlockSize)
       m_nBlockSize = nBlockSize;
       }
 
-   m_pImpl->Start(fSampleRate, nBlockSize);
+   // send sample rate and block size again to plugin
+   m_pEffect->dispatcher(m_pEffect, effSetSampleRate, 0, 0, 0, fSampleRate);
+   m_pEffect->dispatcher(m_pEffect, effSetBlockSize, 0, nBlockSize, 0, 0);
+
+   // call 'resume' with dispatcher
+   m_pEffect->dispatcher(m_pEffect, effMainsChanged, 0, 1, 0, 0);
+
+   if (!!m_pEffect->dispatcher(m_pEffect, effStartProcess, 0, 0, 0, 0))
+      throw Exception("error starting processing in plugin");
 }
 //------------------------------------------------------------------------------
 
@@ -382,7 +491,9 @@ void TVSTHostPlugin::Stop()
 {
    if (!!m_hProcEvents[PLUG_EVENT_STOP])
       SetEvent(m_hProcEvents[PLUG_EVENT_STOP]);
-   m_pImpl->Stop();
+   // call 'suspend' with dispatcher
+   m_pEffect->dispatcher(m_pEffect, effStopProcess, 0, 0, 0, 0);
+   m_pEffect->dispatcher(m_pEffect, effMainsChanged, 0, 0, 0, 0);
 }
 //------------------------------------------------------------------------------
 
@@ -403,7 +514,7 @@ void TVSTHostPlugin::ShowEditor()
 void TVSTHostPlugin::ShowProperties()
 {
    if (!m_pfrmProperties)
-      m_pfrmProperties = new TVSTPluginProperties(m_pImpl);
+      m_pfrmProperties = new TVSTPluginProperties(m_pEffect);
    m_pfrmProperties->Show();
 }
 //------------------------------------------------------------------------------
@@ -413,7 +524,7 @@ void TVSTHostPlugin::ShowProperties()
 //------------------------------------------------------------------------------
 bool TVSTHostPlugin::CanBypass()
 {
-   return (m_pImpl->GetNumInputs() == m_pImpl->GetNumOutputs());
+   return (m_pEffect->numInputs == m_pEffect->numOutputs);
 }
 //------------------------------------------------------------------------------
 
@@ -437,12 +548,18 @@ void TVSTHostPlugin::SetBypass(bool bBypass)
 }
 //------------------------------------------------------------------------------
 
+
 //------------------------------------------------------------------------------
 /// returns processing error
 //------------------------------------------------------------------------------
 AnsiString TVSTHostPlugin::GetProcError()
 {
-   return m_pImpl->GetProcError();
+   AnsiString asReturn;
+   // pass pointer to zero terminated string as input data and pointer to an
+   // AnsiString for receiving return data
+   if (m_pEffect->dispatcher(m_pEffect, effVendorSpecific, HT_VST_VENDOR_PROCERROR, 0, &asReturn, 0))
+      m_asProcError = asReturn;
+   return m_asProcError;
 }
 //------------------------------------------------------------------------------
 
@@ -451,7 +568,13 @@ AnsiString TVSTHostPlugin::GetProcError()
 //------------------------------------------------------------------------------
 AnsiString TVSTHostPlugin::GetProgramName()
 {
-   return m_pImpl->GetProgramName();
+   AnsiString str;
+   // retrieve effect name, vendor and product
+   char sz[256] = {0};
+   ZeroMemory(sz, 256);
+   m_pEffect->dispatcher(m_pEffect, effGetProgramName, 0, 0, sz, 0);
+   str = sz;
+   return str;
 }
 //------------------------------------------------------------------------------
 
@@ -460,7 +583,7 @@ AnsiString TVSTHostPlugin::GetProgramName()
 //------------------------------------------------------------------------------
 int TVSTHostPlugin::GetProgramIndex()
 {
-   return m_pImpl->GetProgramIndex();
+   return (int)m_pEffect->dispatcher(m_pEffect, effGetProgram, 0, 0, 0, 0);
 }
 //------------------------------------------------------------------------------
 
@@ -478,9 +601,9 @@ AnsiString TVSTHostPlugin::GetPrograms()
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::SetProgram(int nIndex)
 {
-   if (nIndex < 0 || nIndex >= m_pImpl->GetNumPrograms())
+   if (nIndex < 0 || nIndex >= m_pEffect->numPrograms)
       throw Exception("program index out of range");
-   m_pImpl->SetProgram(nIndex);
+   m_pEffect->dispatcher(m_pEffect, effSetProgram, 0, nIndex, 0, 0);
    if (m_pfrmEditor)
       {
       m_pfrmEditor->UpdatePrograms();
@@ -497,7 +620,7 @@ void TVSTHostPlugin::SetProgram(AnsiString strName)
    int nIndex = m_pslPrograms->IndexOf(strName);
    if (nIndex == -1)
       throw Exception("program '" + strName + "' not found");
-   m_pImpl->SetProgram(nIndex);
+   m_pEffect->dispatcher(m_pEffect, effSetProgram, 0, nIndex, 0, 0);
    if (m_pfrmEditor)
       {
       m_pfrmEditor->UpdatePrograms();
@@ -511,7 +634,7 @@ void TVSTHostPlugin::SetProgram(AnsiString strName)
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::SetProgramName(AnsiString strName)
 {
-   m_pImpl->SetProgramName(strName);
+   m_pEffect->dispatcher(m_pEffect, effSetProgramName, 0, 0, strName.c_str(), 0);
    // check, if name was changed at all (i.e. if plugin itself supports renaming!)
    if (GetProgramName() != strName)
       throw Exception("setting program name failed!");
@@ -523,6 +646,7 @@ void TVSTHostPlugin::SetProgramName(AnsiString strName)
       }
 }
 //------------------------------------------------------------------------------
+
 
 //------------------------------------------------------------------------------
 /// returns parameters and values as comma delimited string
@@ -612,7 +736,7 @@ float TVSTHostPlugin::GetParameter(AnsiString strName)
    if (nIndex == -1)
       throw Exception("parameter '" + strName + "' not found");
 
-   return m_pImpl->GetParameter(nIndex);
+   return m_pEffect->getParameter(m_pEffect, nIndex);
 }
 //------------------------------------------------------------------------------
 
@@ -621,10 +745,10 @@ float TVSTHostPlugin::GetParameter(AnsiString strName)
 //------------------------------------------------------------------------------
 float TVSTHostPlugin::GetParameter(int nIndex)
 {
-   if (nIndex < 0 || nIndex >= m_pImpl->GetNumParams())
+   if (nIndex < 0 || nIndex >= m_pEffect->numParams)
       throw Exception("parameter index out of range");
 
-   return m_pImpl->GetParameter(nIndex);
+   return m_pEffect->getParameter(m_pEffect, nIndex);
 }
 //------------------------------------------------------------------------------
 
@@ -715,16 +839,17 @@ void TVSTHostPlugin::SetParameters(AnsiString strParams, AnsiString strValues)
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::SetParameter(int nIndex, float fValue, bool bUpdateGUI)
 {
-   if (nIndex < 0 || nIndex >= m_pImpl->GetNumParams())
+   if (nIndex < 0 || nIndex >= m_pEffect->numParams)
       throw Exception("parameter index out of range");
    if (fValue < 0.0f || fValue > 1.0f)
       throw Exception("parameter value out of range (0 <= value <= 1)");
 
-   m_pImpl->SetParameter(nIndex, fValue);
+   m_pEffect->setParameter(m_pEffect, nIndex, fValue);
  /* TODO : check success ??? */
 
    if (bUpdateGUI && m_pfrmEditor)
       m_pfrmEditor->UpdateParameters();
+
 }
 //------------------------------------------------------------------------------
 
@@ -746,7 +871,7 @@ void TVSTHostPlugin::SetParameter(  AnsiString strName,
    if (fValue < 0.0f || fValue > 1.0f)
       throw Exception("parameter value out of range (0 <= value <= 1)");
 
-   m_pImpl->SetParameter(nIndex, fValue);
+   m_pEffect->setParameter(m_pEffect, nIndex, fValue);
  /* TODO : check success ??? */
 
    if (bUpdateGUI && m_pfrmEditor)
@@ -755,13 +880,14 @@ void TVSTHostPlugin::SetParameter(  AnsiString strName,
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// returns plugin category
+/// sets parameter value by name
 //------------------------------------------------------------------------------
-EVSTPluginCategory TVSTHostPlugin::GetCategory()
+VstPlugCategory TVSTHostPlugin::GetCategory()
 {
    return m_kPlugCategory;
 }
 //------------------------------------------------------------------------------
+
 
 //------------------------------------------------------------------------------
 /// Main processing routine. Calls process or processReplacing respectively.
@@ -871,11 +997,25 @@ void TVSTHostPlugin::Process(const vvfVST& vvfBuffer, const std::vector<vvfVST>&
 
 //------------------------------------------------------------------------------
 /// internal processing routine to be called after data are in place: calls
-/// the implementation's processing routine
+/// VST-plugins processing routine
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::DoProcess()
 {
-   m_pImpl->Process(&m_vapfIn[0], &m_vapfOut[0], m_nBlockSize);
+   /*
+   DWORD dw = 10000;
+   while (dw--) ;
+   return;
+   */
+   #ifndef VST_2_4_EXTENSIONS
+   if (!m_bCanReplacing)
+      {
+      m_pEffect->process(m_pEffect, &m_vapfIn[0], &m_vapfOut[0], m_nBlockSize);
+      }
+   else
+   #endif
+      {
+      m_pEffect->processReplacing(m_pEffect, &m_vapfIn[0], &m_vapfOut[0], m_nBlockSize);
+      }
 }
 
 //------------------------------------------------------------------------------
@@ -917,12 +1057,212 @@ const std::vector<TVSTNode >& TVSTHostPlugin::GetInputMapping()
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// Calls effEditIdle equivalent
+/// Calls effEditIdle
 //------------------------------------------------------------------------------
 void TVSTHostPlugin::CallEditIdle()
 {
-   m_pImpl->EditIdle();
+   m_pEffect->dispatcher(m_pEffect, effEditIdle, 0, 0, 0, 0);
 }
 //------------------------------------------------------------------------------
+
+//******************************************************************************
+/// \class TVSTPluginEditor. Simple VST-Parameter-Editor class
+//******************************************************************************
+
+//------------------------------------------------------------------------------
+/// constructor. Creates parameter frames and menu items for program changes
+//------------------------------------------------------------------------------
+__fastcall TVSTPluginEditor::TVSTPluginEditor(TVSTHostPlugin* pParentPlugin)
+   : TForm((TComponent*)NULL), m_pParentPlugin(pParentPlugin)
+{
+   if (!pParentPlugin)
+      throw Exception("invalid VST instance passed");
+
+   AnsiString str = m_pParentPlugin->m_strProductString + " " + m_pParentPlugin->m_strEffectName;
+   if (!Trim(str).IsEmpty() && !m_pParentPlugin->m_strVendorString.IsEmpty())
+      str += " (" + m_pParentPlugin->m_strVendorString + ")";
+   if (Trim(str).IsEmpty())
+      str = ExtractFileName(ChangeFileExt(m_pParentPlugin->m_strLibName, ""));
+   Caption = "VSTPluginEditor - " + str;
+
+   for (int i = 0; i < pcPages->PageCount; i++)
+      pcPages->Pages[i]->TabVisible = false;
+   pcPages->MultiLine  = false;
+
+
+   TframeVSTParam *pframe = NULL;
+   // Iterate parameters...
+   int nNumParams = pParentPlugin->m_pEffect->numParams;
+   if (!nNumParams)
+      return;
+   for (VstInt32 nParamIndex = 0; nParamIndex < nNumParams; nParamIndex++)
+      pframe = new TframeVSTParam(scbParameter, pParentPlugin->m_pEffect, nParamIndex);
+
+   // adjust height of dialog: maximum of 10 parameters 
+   m_nParameterDlgWidth    = pframe->Width + (ClientWidth - scbParameter->Width);
+   if (nNumParams > 10)
+      nNumParams = 10;
+   m_nParameterDlgHeight   = (nNumParams * pframe->Height) + scbParameter->Top + (ClientHeight - tsParameter->Height);
+
+   UpdatePrograms();
+
+   miPluginDlg->Enabled = (pParentPlugin->m_pEffect->flags & effFlagsHasEditor);
+   miDlgClick(miPluginDlg->Enabled ? miPluginDlg : miParDlg);
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Updates plugin parameters of all instances of TframeVSTParam
+//------------------------------------------------------------------------------
+void TVSTPluginEditor::UpdateParameters()
+{
+   // update parameters
+   TframeVSTParam *pframe;
+   for (int nParamIndex = 0; nParamIndex < scbParameter->ComponentCount; nParamIndex++)
+      {
+      pframe = dynamic_cast<TframeVSTParam*>(scbParameter->Components[nParamIndex]);
+      if (pframe)
+         pframe->UpdateValue(true);
+      }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Updates plugin program names
+//------------------------------------------------------------------------------
+void TVSTPluginEditor::UpdatePrograms()
+{
+   TMenuItem *pmi;
+   for (int nProgramIndex = 0; nProgramIndex < m_pParentPlugin->m_pslPrograms->Count; nProgramIndex++)
+      {
+      if (nProgramIndex >= miPrograms->Count)
+         {
+         pmi = new TMenuItem(miPrograms);
+         pmi->OnClick   = miProgramClick;
+         pmi->Tag       = nProgramIndex;
+         pmi->RadioItem = true;
+         miPrograms->Add(pmi);
+         }
+      else
+         {
+         pmi = miPrograms->Items[nProgramIndex];
+         }
+
+      pmi->Caption   = m_pParentPlugin->m_pslPrograms->Strings[nProgramIndex];
+
+      if (m_pParentPlugin->GetProgramName() == pmi->Caption)
+         pmi->Checked = true;
+      }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Sets editor (internal or external.
+//------------------------------------------------------------------------------
+void TVSTPluginEditor::SetEditor()
+{
+   if (!m_pParentPlugin)
+      return;
+
+   if (miParDlg->Checked)
+      {
+      ClientWidth          = m_nParameterDlgWidth;
+      ClientHeight         = m_nParameterDlgHeight;
+      if (scbParameter->VertScrollBar->IsScrollBarVisible())
+         ClientWidth += GetSystemMetrics(SM_CYHSCROLL);
+      UpdateParameters();
+      pcPages->ActivePage  = tsParameter;
+      }
+   else
+      {
+      pcPages->ActivePage = tsPlugin;
+      m_pParentPlugin->m_pEffect->dispatcher(m_pParentPlugin->m_pEffect, effEditOpen, 0, 0, tsPlugin->Handle, 0);
+      ERect* eRect = 0;
+      m_pParentPlugin->m_pEffect->dispatcher(m_pParentPlugin->m_pEffect, effEditGetRect, 0, 0, &eRect, 0);
+      if (eRect)
+         {
+         ClientWidth = eRect->right - eRect->left + (ClientWidth - tsPlugin->Width);
+         ClientHeight = eRect->bottom - eRect->top + (ClientHeight - tsPlugin->Height);
+
+         if (Width < 100)
+            Width = 100;
+         if (Height < 100)
+            Height = 100;
+         }
+      }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Calls FormDestroy
+//------------------------------------------------------------------------------
+#pragma argsused
+void __fastcall TVSTPluginEditor::FormClose(TObject *Sender, TCloseAction &Action)
+{
+   FormDestroy(Sender);
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// calls VST effEditClose
+//------------------------------------------------------------------------------
+#pragma argsused
+void __fastcall TVSTPluginEditor::FormDestroy(TObject *Sender)
+{
+   if (m_bHasEditor && m_pParentPlugin->m_pEffect)
+      m_pParentPlugin->m_pEffect->dispatcher(m_pParentPlugin->m_pEffect, effEditClose, 0, 0, 0, 0);
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Sets editor to internal or external repectively
+//------------------------------------------------------------------------------
+void __fastcall TVSTPluginEditor::miDlgClick(TObject *Sender)
+{
+   if (Sender == miParDlg || !miPluginDlg->Enabled)
+      miParDlg->Checked = true;
+   else if (Sender == miPluginDlg)
+      miPluginDlg->Checked = true;
+   else
+      return;
+
+   SetEditor();
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Selects a program and call UpdateParameters
+//------------------------------------------------------------------------------
+void __fastcall TVSTPluginEditor::miProgramClick(TObject *Sender)
+{
+   TMenuItem *pmi = dynamic_cast<TMenuItem*>(Sender);
+   if (pmi)
+      {
+      m_pParentPlugin->m_pEffect->dispatcher(m_pParentPlugin->m_pEffect, effSetProgram, 0, (int)pmi->Tag, 0, 0);
+      pmi->Checked = true;
+      UpdateParameters();
+      }
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Calls UpdateParameters
+//------------------------------------------------------------------------------
+#pragma argsused
+void __fastcall TVSTPluginEditor::miUpdateParsClick(TObject *Sender)
+{
+   UpdateParameters();
+}
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// Calls UpdateParameters
+//------------------------------------------------------------------------------
+#pragma argsused
+void __fastcall TVSTPluginEditor::FormShow(TObject *Sender)
+{
+   UpdateParameters();
+}
+//---------------------------------------------------------------------------
 
 

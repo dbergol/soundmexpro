@@ -189,13 +189,6 @@
         <CppCompile Include="..\SoundDllPro\SoundDllPro_Style.cpp">
             <BuildOrder>5</BuildOrder>
         </CppCompile>
-        <CppCompile Include="..\SoundDllPro\VSTPluginEditor.cpp">
-            <Form>VSTPluginEditor</Form>
-            <FormType>dfm</FormType>
-            <DependentOn>..\SoundDllPro\VSTPluginEditor.h</DependentOn>
-            <BuildOrder>6</BuildOrder>
-        </CppCompile>
-        <FormResources Include="..\SoundDllPro\VSTPluginEditor.dfm"/>
         <FormResources Include="SoundDllProLoaderMain.dfm"/>
         <FormResources Include="formSoundDllProLoaderSettings.dfm"/>
         <BuildConfiguration Include="Base">
@@ -352,19 +345,7 @@
                 </DeployFile>
                 <DeployFile LocalName="..\..\bin64\SoundDllProLoader.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="..\..\bin\SoundDllProLoader.exe" Configuration="Release" Class="ProjectOutput"/>
-                <DeployFile LocalName="..\..\bin\SoundDllProLoader.exe" Configuration="Release" Class="ProjectOutput">
-                    <Platform Name="Win32">
-                        <RemoteName>SoundDllProLoader.exe</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="SoundDllProLoader.res" Configuration="Release" Class="ProjectFile"/>
-                <DeployFile LocalName="SoundDllProLoader.res" Configuration="Release" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployClass Name="AdditionalDebugSymbols">
                     <Platform Name="iOSSimulator">
                         <Operation>1</Operation>

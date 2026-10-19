@@ -49,27 +49,28 @@ object VSTPluginEditor: TVSTPluginEditor
     Top = 0
     Width = 588
     Height = 593
-    ActivePage = tsParameters
+    ActivePage = tsParameter
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 596
+    ExplicitHeight = 605
     object tsParameter: TTabSheet
       Caption = 'tsParameter'
       object scbParameter: TScrollBox
         Left = 0
         Top = 22
-        Width = 580
-        Height = 543
+        Width = 588
+        Height = 555
         HorzScrollBar.Visible = False
         Align = alClient
         BevelOuter = bvNone
         BorderStyle = bsNone
         TabOrder = 0
-        ExplicitLeft = 3
       end
       object sb: TStatusBar
         Left = 0
         Top = 0
-        Width = 580
+        Width = 588
         Height = 22
         Align = alTop
         Color = clBtnHighlight
@@ -98,39 +99,6 @@ object VSTPluginEditor: TVSTPluginEditor
     object tsPlugin: TTabSheet
       Caption = 'tsPlugin'
       ImageIndex = 1
-    end
-    object tsParameters: TTabSheet
-      Caption = 'tsParameters'
-      ImageIndex = 2
-      object lv: TListView
-        Left = 0
-        Top = 0
-        Width = 580
-        Height = 565
-        Align = alClient
-        Columns = <
-          item
-            Caption = 'No.'
-            Width = 40
-          end
-          item
-            Caption = 'Name'
-            Width = 200
-          end
-          item
-            Caption = 'Value'
-            Width = 120
-          end
-          item
-            Caption = 'Unit'
-            Width = 120
-          end
-          item
-            Width = 300
-          end>
-        TabOrder = 0
-        ViewStyle = vsReport
-      end
     end
   end
   object mnuMain: TMainMenu

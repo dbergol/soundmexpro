@@ -39,10 +39,12 @@
 
 #define VSTHOST_NUM_PLUGINS   5
 
+
+
 class SoundDllProMain;
 
 //------------------------------------------------------------------------------
-/// \class TVSTHostPluginInstance. Helper class for storing plugin instances and
+/// \class TVSTHostPluginInstance. Helper class for storing plugin instances an
 /// references to them respectively
 //------------------------------------------------------------------------------
 class TVSTHostPluginInstance
@@ -96,6 +98,13 @@ class TVSTHost
       UnicodeString        m_usName;
 
       static SoundDllProMain*     SoundInstance();
+      // static host callback
+      static VstIntPtr VSTCALLBACK VSTHostCallback (  AEffect* effect,
+                                                      VstInt32 opcode,
+                                                      VstInt32 index,
+                                                      VstIntPtr value,
+                                                      void* ptr,
+                                                      float opt);
    protected:
 
    private:
@@ -119,6 +128,7 @@ class TVSTHost
       void                 ProcessST(vvfVST& vvfBuffers);
       void                 ProcessMT(vvfVST& vvfBuffers);
       bool                 HasPlugins();
+
 };
 //------------------------------------------------------------------------------
 #endif

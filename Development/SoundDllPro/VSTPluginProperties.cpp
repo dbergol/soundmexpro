@@ -2,7 +2,7 @@
 /// \file VSTPluginProperties.cpp
 /// \author Berg
 /// \brief Implementation of class TVSTPluginProperties holding properties of
-/// a VST-plugin retrieved through IVSTPluginImpl (format-independent)
+/// a VST-plugin retrieved through VST interface
 ///
 /// Project SoundMexPro
 /// Module  SoundDllPro.dll
@@ -32,18 +32,30 @@
 #pragma hdrstop
 
 #include "VSTPluginProperties.h"
-#include "VSTPluginImpl.h"
+#include "VSTHostPlugin.h"
 //---------------------------------------------------------------------------
 #pragma package(smart_init)
 #pragma resource "*.dfm"
+
+#define VST_STR_PROP(p, name) \
+   ZeroMemory(sz, 1024);\
+   m_pEffect->dispatcher (m_pEffect, p, 0, 0, sz, 0);\
+   pli = lv->Items->Add();\
+   pli->Caption = name;\
+   pli->SubItems->Add(sz);
+
+#define VST_INT_PROP(p, name) \
+   pli = lv->Items->Add();\
+   pli->Caption = name;\
+   pli->SubItems->Add((int)p);
 
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 /// constructor
 //------------------------------------------------------------------------------
-__fastcall TVSTPluginProperties::TVSTPluginProperties(IVSTPluginImpl* pImpl)
-   : TForm((TComponent*)NULL), m_pImpl(pImpl)
+__fastcall TVSTPluginProperties::TVSTPluginProperties(AEffect* pEffect)
+   : TForm((TComponent*)NULL), m_pEffect(pEffect)
 {
 }
 //------------------------------------------------------------------------------
@@ -54,21 +66,51 @@ __fastcall TVSTPluginProperties::TVSTPluginProperties(IVSTPluginImpl* pImpl)
 #pragma argsused
 void __fastcall TVSTPluginProperties::FormShow(TObject *Sender)
 {
-   if (!m_pImpl)
+   if (!m_pEffect)
       return;
 
    lv->Clear();
 
-   std::vector<TVSTInfoProperty> vProps;
-   m_pImpl->GetInfoProperties(vProps);
-
    TListItem* pli;
-   for (unsigned int i = 0; i < vProps.size(); i++)
+   char sz[1024];
+
+   VST_STR_PROP(effGetEffectName,      "EffectName");
+   VST_STR_PROP(effGetVendorString,    "VendorString");
+   VST_STR_PROP(effGetProductString,   "ProductString");
+
+   int nVersion = (int)m_pEffect->dispatcher(m_pEffect,effGetVstVersion,0,0,NULL,0.0f);
+   if (nVersion < 1)
+      nVersion = 1000;
+   VST_INT_PROP(nVersion, "VST-Version");
+   VST_INT_PROP(m_pEffect->version, "Version");
+
+
+   VST_INT_PROP(m_pEffect->numPrograms, "numPrograms");
+   VST_INT_PROP(m_pEffect->numParams, "numParams");
+   VST_INT_PROP(m_pEffect->numInputs, "numInputs");
+   VST_INT_PROP(m_pEffect->numOutputs, "numOutputs");
+   VST_INT_PROP(m_pEffect->initialDelay, "initialDelay");
+//   VST_INT_PROP(m_pEffect->realQualities, "realQualities");
+//   VST_INT_PROP(m_pEffect->offQualities, "offQualities");
+//   VST_FLOAT_PROP((double)m_pEffect->ioRatio, "ioRatio");
+   VST_INT_PROP(m_pEffect->uniqueID, "uniqueID");
+
+   VST_INT_PROP(!!(m_pEffect->flags & effFlagsHasEditor), "effFlagsHasEditor");
+//   VST_INT_PROP(!!(m_pEffect->flags & effFlagsHasClip), "effFlagsHasClip");
+//   VST_INT_PROP(!!(m_pEffect->flags & effFlagsHasVu), "effFlagsHasVu");
+//   VST_INT_PROP(!!(m_pEffect->flags & effFlagsCanMono), "effFlagsCanMono");
+   VST_INT_PROP(!!(m_pEffect->flags & effFlagsProgramChunks), "effFlagsProgramChunks");
+   VST_INT_PROP(!!(m_pEffect->flags & effFlagsCanReplacing), "effFlagsCanReplacing");
+   if (nVersion >= 2000)
       {
-      pli = lv->Items->Add();
-      pli->Caption = vProps[i].strName;
-      pli->SubItems->Add(vProps[i].strValue);
+      VST_INT_PROP(!!(m_pEffect->flags & effFlagsIsSynth), "effFlagsIsSynth");
+      VST_INT_PROP(!!(m_pEffect->flags & effFlagsNoSoundInStop), "effFlagsNoSoundInStop");
+      VST_INT_PROP(!!m_pEffect->dispatcher(m_pEffect,effCanDo,0,0,(void*)"plugAsChannelInsert",0.0f), "plugAsChannelInsert");
+      VST_INT_PROP(!!m_pEffect->dispatcher(m_pEffect,effCanDo,0,0,(void*)"plugAsSend",0.0f), "plugAsSend");
+      VST_INT_PROP(!!m_pEffect->dispatcher(m_pEffect,effCanDo,0,0,(void*)"mixDryWet",0.0f), "mixDryWet");
       }
+
+   VST_INT_PROP(!!(m_pEffect->dispatcher (m_pEffect, effCanDo, 0, 0, (void*)"bypass", 0)), "CanBypass");
 }
 //------------------------------------------------------------------------------
 
@@ -83,3 +125,4 @@ void __fastcall TVSTPluginProperties::FormKeyDown(TObject *Sender,
       FormShow(NULL);
 }
 //------------------------------------------------------------------------------
+

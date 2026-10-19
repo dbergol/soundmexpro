@@ -2,7 +2,7 @@
 /// \file VSTPluginProperties.h
 /// \author Berg
 /// \brief Implementation of class TVSTPluginProperties holding properties of
-/// a VST-plugin retrieved through IVSTPluginImpl (format-independent)
+/// a VST-plugin retrieved through VST interface
 ///
 /// Project SoundMexPro
 /// Module  SoundDllPro.dll
@@ -37,11 +37,10 @@
 #include <Forms.hpp>
 #include <ComCtrls.hpp>
 
-class IVSTPluginImpl;
+struct AEffect;
 
 //------------------------------------------------------------------------------
-/// Class holding VST-Plugin properties. Format-independent: simply displays
-/// whatever name/value pairs IVSTPluginImpl::GetInfoProperties() returns.
+/// Class holding VST-Plugin properties
 //------------------------------------------------------------------------------
 class TVSTPluginProperties : public TForm
 {
@@ -51,9 +50,9 @@ class TVSTPluginProperties : public TForm
    void __fastcall FormKeyDown(TObject *Sender, WORD &Key,
           TShiftState Shift);
    private:
-      IVSTPluginImpl* m_pImpl;
+      AEffect* m_pEffect;
    public:
-      __fastcall TVSTPluginProperties(IVSTPluginImpl* pImpl);
+      __fastcall TVSTPluginProperties(AEffect* pEffect);
 };
 //------------------------------------------------------------------------------
 #endif

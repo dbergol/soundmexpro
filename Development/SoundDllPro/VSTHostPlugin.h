@@ -1,14 +1,15 @@
 //------------------------------------------------------------------------------
 /// \file VSTHostPlugin.h
 /// \author Berg
-/// \brief Implementation of classes TVSTThread and TVSTHostPlugin.
-/// Encapsulates one VST-plugin
+/// \brief Implementation of classes TVSTPluginEditor and TVSTHostPlugin.
+/// Encapsulates one VST-plugin and a parameter editor for a VST-plugin
 ///
 /// Project SoundMexPro
 /// Module  SoundDllPro.dll
 ///
+///
 /// ****************************************************************************
-/// Copyright 2026 Daniel Berg, Oldenburg, Germany
+/// Copyright 2023 Daniel Berg, Oldenburg, Germany
 /// ****************************************************************************
 ///
 /// This file is part of SoundMexPro.
@@ -32,18 +33,32 @@
 
 #include <vcl.h>
 #include <Classes.hpp>
+#include <ComCtrls.hpp>
+#include <Controls.hpp>
+#include <ExtCtrls.hpp>
+#include <Forms.hpp>
+#include <Menus.hpp>
+#include "VSTParameterFrame.h"
 #include <vector>
 #include <valarray>
 //---------------------------------------------------------------------------
-#include "VSTPluginEditor.h"
+#include "VSTParameterFrame.h"
 #include "VSTPluginProperties.h"
-#include "VSTPluginImpl.h"
-//------------------------------------------------------------------------------
+// switch off clang warnings from VST-SDK
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wreserved-id-macro"
+#pragma clang diagnostic ignored "-Wundef"
+#pragma clang diagnostic ignored "-Wmismatched-tags"
+#pragma clang diagnostic ignored "-Wextra-semi"
+#pragma clang diagnostic ignored "-Wdocumentation-unknown-command"
+#include "aeffectx.h"
+#pragma clang diagnostic pop // restore options
+
+#include "VSTVendorDefs.h"
+
 
 typedef std::vector<std::valarray<float> > vvfVST;
-class TVSTHostPlugin;
-class TVSTPluginEditor;
-
 
 //------------------------------------------------------------------------------
 /// \class TVSTNode. Helper class describing a 'node' within the VST mapping matrix
@@ -71,6 +86,74 @@ enum PlugEvents {
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
+/// definitions needed to use VST 2.4 syntax and types with VST 2.3
+/// (defined in aeffect.h of VST-SDK 2.4). Not used up to now.
+//------------------------------------------------------------------------------
+#ifndef VST_2_4_EXTENSIONS
+   // switch off clang warnings from VST-SDK
+   #pragma clang diagnostic push
+   #pragma clang diagnostic ignored "-Wreserved-id-macro"
+   #pragma clang diagnostic ignored "-Wundef"
+   #pragma clang diagnostic ignored "-Wmismatched-tags"
+   #pragma clang diagnostic ignored "-Wextra-semi"
+   #pragma clang diagnostic ignored "-Wunused-parameter"
+   #pragma clang diagnostic ignored "-Wshadow-field-in-constructor"
+   #include "AEffEditor.hpp"
+   #pragma clang diagnostic pop
+   typedef long VstInt32;        /// 32 bit integer type.
+   typedef VstInt32 VstIntPtr;   /// platform-dependent integer type, same size as pointer
+   typedef short VstInt16;       /// 16 bit integer type
+#endif
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
+/// define needed for VST-plugin handling...
+//------------------------------------------------------------------------------
+typedef AEffect* (*PluginEntryProc) (audioMasterCallback audioMaster);
+//------------------------------------------------------------------------------
+
+
+class TVSTHostPlugin;
+
+//------------------------------------------------------------------------------
+/// \class TVSTPluginEditor. VST-plugin-parameter editor
+//------------------------------------------------------------------------------
+class TVSTPluginEditor : public TForm
+{
+   __published:
+      TMainMenu *mnuMain;
+      TMenuItem *miSettings;
+      TMenuItem *miParDlg;
+      TMenuItem *miPluginDlg;
+      TPageControl *pcPages;
+      TTabSheet *tsParameter;
+      TTabSheet *tsPlugin;
+      TScrollBox *scbParameter;
+      TStatusBar *sb;
+      TMenuItem *miPrograms;
+      TMenuItem *N1;
+      TMenuItem *miUpdatePars;
+      void __fastcall FormClose(TObject *Sender, TCloseAction &Action);
+      void __fastcall FormDestroy(TObject *Sender);
+      void __fastcall miDlgClick(TObject *Sender);
+      void __fastcall miProgramClick(TObject *Sender);
+      void __fastcall miUpdateParsClick(TObject *Sender);
+      void __fastcall FormShow(TObject *Sender);
+   private:
+      TVSTHostPlugin*   m_pParentPlugin;
+      bool              m_bHasEditor;
+      int               m_nParameterDlgWidth;
+      int               m_nParameterDlgHeight;
+      void              SetEditor();
+   public:
+      __fastcall TVSTPluginEditor(TVSTHostPlugin* pParentPlugin);
+      void              UpdateParameters();
+      void              UpdatePrograms();
+};
+//------------------------------------------------------------------------------
+
+
+//------------------------------------------------------------------------------
 /// \class thread class for plugin
 //------------------------------------------------------------------------------
 class TVSTThread : public TThread
@@ -84,9 +167,7 @@ class TVSTThread : public TThread
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// \class TVSTHostPlugin. Class for handling one VST-plugin. Public interface
-/// unchanged; internally delegates all plugin-format-specific work to an
-/// IVSTPluginImpl instance (m_pImpl).
+/// \class TVSTHostPlugin. Class for handling one VST-plugin
 //------------------------------------------------------------------------------
 class TVSTHostPlugin
 {
@@ -95,11 +176,13 @@ class TVSTHostPlugin
    friend class TVSTThread;
    public:
       AnsiString              m_strEffectName;
+//      AnsiString              m_strInternalName;
       AnsiString              m_strVendorString;
       AnsiString              m_strProductString;
       AnsiString              m_strLibName;
 
       TVSTHostPlugin(AnsiString                 strLibName,
+                     audioMasterCallback        HostCallback,
                      float                      fSampleRate,
                      int                        nBlockSize,
                      const std::vector<TVSTNode>&  vMappingIn,
@@ -143,19 +226,23 @@ class TVSTHostPlugin
       const std::vector<int>&       GetOutputMapping();
       const std::vector<TVSTNode >& GetInputMapping();
       void                    CallEditIdle();
-      EVSTPluginCategory      GetCategory();
+      VstPlugCategory         GetCategory();
       bool                    SetUserConfig(AnsiString& as);
    private:
-      IVSTPluginImpl*         m_pImpl;
+      AEffect*                m_pEffect;
       TVSTThread*             m_pProcThread;
       HANDLE                  m_hProcEvents[PLUG_EVENT_LAST];
+      char*                   m_lpcszUserConfig;
+      bool                    m_bCanReplacing;
       bool                    m_bBypass;
-      EVSTPluginCategory      m_kPlugCategory;
+      VstPlugCategory         m_kPlugCategory;
       TStringList*            m_pslPrograms;
       TStringList*            m_pslParams;
+      HMODULE                 m_hLib;
       TVSTPluginEditor*       m_pfrmEditor;
       TVSTPluginProperties*   m_pfrmProperties;
       int                     m_nBlockSize;
+      AnsiString              m_asProcError;
       std::vector<std::valarray<float> >  m_vvafIn;      /// internal input buffers
       std::vector<std::valarray<float> >  m_vvafOut;     /// internal output buffers
       std::valarray<float *>  m_vapfIn;      /// internal pointer lists to input buffers
