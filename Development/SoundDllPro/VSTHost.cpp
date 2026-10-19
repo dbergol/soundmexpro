@@ -39,9 +39,10 @@
 //------------------------------------------------------------------------------
 
 
+//------------------------------------------------------------------------------
 // initialize static member
 SoundDllProMain* TVSTHost::sm_phtSound = NULL;
-
+//------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
 /// Constructor. Initializes members
@@ -88,7 +89,6 @@ TVSTHost::~TVSTHost()
 
 //------------------------------------------------------------------------------
 /// returns static sound instance member
-/// \retval static sound instance member
 //------------------------------------------------------------------------------
 SoundDllProMain* TVSTHost::SoundInstance()
 {
@@ -96,7 +96,6 @@ SoundDllProMain* TVSTHost::SoundInstance()
 }
 
 //------------------------------------------------------------------------------
-
 
 //------------------------------------------------------------------------------
 /// checks if asio device is in state RUNNING
@@ -112,7 +111,6 @@ void TVSTHost::AssertSoundRunning()
 
 //------------------------------------------------------------------------------
 /// returns current buffer size
-/// \retval current buffer size
 //------------------------------------------------------------------------------
 long   TVSTHost::BufsizeCurrent()
 {
@@ -123,8 +121,7 @@ long   TVSTHost::BufsizeCurrent()
 //------------------------------------------------------------------------------
 
 //------------------------------------------------------------------------------
-/// returns current sample rete
-/// \retval current sample rete
+/// returns current samplerate
 //------------------------------------------------------------------------------
 double TVSTHost::SampleRate()
 {
@@ -145,7 +142,6 @@ void TVSTHost::AssertIndices(const unsigned int& nLayer, const unsigned int& nCh
       throw Exception("plugin channel out of range");
 }
 //------------------------------------------------------------------------------
-
 
 //------------------------------------------------------------------------------
 /// Initializes plugin vector and internal buffer
@@ -306,7 +302,6 @@ TVSTHostPlugin* TVSTHost::LoadPlugin(  UnicodeString usLibName,
    TThreadPriority tp = (TThreadPriority)((int)tpNormal + m_nThreadPriority);
    // create new plugin
    TVSTHostPlugin *pPlugin = new TVSTHostPlugin(usLibName,
-                                                VSTHostCallback,
                                                 (float)SampleRate(),
                                                 (int)m_nBlockSize,
                                                 vNodes,
@@ -318,7 +313,7 @@ TVSTHostPlugin* TVSTHost::LoadPlugin(  UnicodeString usLibName,
    try
       {
       // check category: synth not supported!!
-      if (pPlugin->GetCategory() == kPlugCategSynth)
+      if (pPlugin->GetCategory() == vpcSynth)
          throw Exception("synth plugins not supported");
 
 
@@ -423,8 +418,6 @@ bool TVSTHost::IsPlugin(const unsigned int& nLayer, const unsigned int& nChannel
    return (!!m_vvpPlugins[nLayer][nChannel].m_pPlugin && m_vvpPlugins[nLayer][nChannel].m_nReference == -1);
 }
 //------------------------------------------------------------------------------
-
-
 
 //------------------------------------------------------------------------------
 /// calls Stop function of all plugins
@@ -811,52 +804,6 @@ void __fastcall TVSTHost::OnIdleTimer(TObject *Sender)
 }
 //------------------------------------------------------------------------------
 
-//------------------------------------------------------------------------------
-/// VST-Host callback (static member function)
-//------------------------------------------------------------------------------
-#pragma argsused
-VstIntPtr VSTCALLBACK TVSTHost::VSTHostCallback( AEffect* effect,
-                                       VstInt32 opcode,
-                                       VstInt32 index,
-                                       VstIntPtr value,
-                                       void* ptr,
-                                       float opt)
-{
-   VstIntPtr result = 0;
-   switch (opcode)
-      {
-      case audioMasterVersion :
-            #ifdef VST_2_4_EXTENSIONS
-            result = kVstVersion;
-            #else
-            result = 2300;
-            #endif
-            break;
-      case  audioMasterCanDo:
-            result = 0;
-            break;
 
-      // return and set current block size in plugin
-      case audioMasterGetBlockSize:
-            if (!!SoundInstance())
-               {
-               result = (VstIntPtr)SoundInstance()->SoundBufsizeSamples();
-               // send sample rate and block size again to plugin
-               effect->dispatcher(effect, effSetBlockSize, 0, result, 0, 0);
-               }
-            break;
-      case audioMasterGetSampleRate:
-            if (!!SoundInstance())
-               {
-               result = (int)SoundInstance()->SoundGetSampleRate();
-               // send sample rate and block size again to plugin
-               effect->dispatcher(effect, effSetSampleRate, 0, 0, 0, result);
-               }
-            break;
-      }
-
-   return result;
-}
-//------------------------------------------------------------------------------
 
 

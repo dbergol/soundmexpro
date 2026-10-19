@@ -34,6 +34,7 @@
 #include "SoundDllPro_Style.h"
 USEFORM("SoundDllProLoaderMain.cpp", frmSoundMaster);
 USEFORM("formSoundDllProLoaderSettings.cpp", frmSoundDllProLoaderSettings);
+USEFORM("..\SoundDllPro\VSTPluginEditor.cpp", VSTPluginEditor);
 //---------------------------------------------------------------------------
 USEFORM("SoundDllProLoaderMain.cpp", frmSoundMaster)
 USEFORM("formSoundDllProLoaderSettings.cpp", frmSoundDllProLoaderSettings)
@@ -54,8 +55,8 @@ WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int)
      SetStyle();
      Application->Initialize();
      Application->CreateForm(__classid(TfrmSoundMaster), &frmSoundMaster);
-     Application->CreateForm(__classid(TfrmSoundDllProLoaderSettings), &frmSoundDllProLoaderSettings);
-     Application->Run();
+       Application->CreateForm(__classid(TfrmSoundDllProLoaderSettings), &frmSoundDllProLoaderSettings);
+       Application->Run();
    }
    catch (Exception &exception)
    {
